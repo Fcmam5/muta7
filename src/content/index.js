@@ -67,10 +67,24 @@ function applyColorBlindnessState(colorState, allowed) {
   module.update?.({ mode: colorState.mode });
 }
 
+function applyMotorState(blockerState, allowed) {
+  const module = globalThis.Muta7MotorBlockerModule;
+  if (!module) return;
+
+  const mode = blockerState?.mode ?? "none";
+  if (!allowed || mode === "none") {
+    module.disable?.();
+    return;
+  }
+
+  module.update?.({ mode });
+}
+
 function applyState(extensionState) {
   const allowed = isCurrentUrlAllowed(extensionState);
   applyBlurState(extensionState?.visual?.blur, allowed);
   applyColorBlindnessState(extensionState?.visual?.colorBlindness, allowed);
+  applyMotorState(extensionState?.motor?.blocker, allowed);
 }
 
 chrome.runtime.sendMessage({ type: "GET_STATE" }, (response) => {

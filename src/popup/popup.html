@@ -80,6 +80,26 @@
         </select>
       </section>
 
+      <section
+        class="control-group"
+        aria-labelledby="motor-controls-heading"
+        aria-describedby="motor-controls-help"
+      >
+        <h2 id="motor-controls-heading" class="section-heading">
+          Motor disability simulation
+        </h2>
+        <p id="motor-controls-help" class="field-hint">
+          Block mouse and/or keyboard input to mimic voice-only navigation
+          setups.
+        </p>
+        <label for="motor-mode">Interaction mode</label>
+        <select id="motor-mode">
+          <option value="none">Allow mouse & keyboard</option>
+          <option value="mouse">Disable mouse (pointer)</option>
+          <option value="full">Disable mouse & keyboard</option>
+        </select>
+      </section>
+
       <section class="control-group" aria-labelledby="scope-heading">
         <h2 id="scope-heading" class="section-heading">Website scope</h2>
         <button id="enable-current-site" type="button" class="button-secondary">

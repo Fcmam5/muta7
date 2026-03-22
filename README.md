@@ -11,6 +11,10 @@ Muta7 is a Chromium browser extension that simulates real-world accessibility im
 - **Visual Impairment Simulation** (v0)
   - Adjustable blur intensity
   - Color blindness filters (Protanopia, Deuteranopia, Tritanopia, Monochromacy)
+- **Motor Disability Simulation** (v0)
+  - Disable mouse/pointer interactions (cursor forced to `help`)
+  - Disable both mouse and keyboard to mimic voice-only workflows
+  - Applies only on websites you explicitly allow
 - **Website Scoping**
   - Enable only on specified websites
   - Support for origin and path-level rules
@@ -70,8 +74,16 @@ By default, Muta7 works only on websites you specify:
 - **Blur simulation** — Toggle on/off
 - **Intensity** — Slider from 0–100
 - **Color blindness filter** — Toggle on/off with selectable modes
+- **Motor disability simulation** — Choose between “allow all,” “disable mouse,” or “disable mouse & keyboard”
 - **Reminder banner** — Shows when any simulation is active
 - **Extension badge** — Shows active simulation count
+
+### Motor disability simulation
+
+- Enable the extension on the websites you want to test (Website scope section)
+- Pick **Disable mouse (pointer)** to block all hover, click, scroll, and pointer events while forcing the cursor to the `help` icon
+- Pick **Disable mouse & keyboard** to also block keyboard interactions, approximating voice-only environments
+- Motor blocking automatically pauses on sites outside the allowed list so the rest of your browsing stays unaffected
 
 ## What This Is Not
 
@@ -80,7 +92,7 @@ By default, Muta7 works only on websites you specify:
 For comprehensive accessibility testing and compliance, use dedicated tools maintained by experts:
 - [Lighthouse](https://developer.chrome.com/docs/lighthouse/overview)
 - [Axe](https://www.deque.com/axe/)
-- [W3C Web Accessibility Evaluation Tools List](https://www.w3.org/WAI/test-evaluate/tools/list/)
+- Or check the [W3C Web Accessibility Evaluation Tools List](https://www.w3.org/WAI/test-evaluate/tools/list/)
 
 Muta7 complements these tools by letting you *feel* accessibility issues, not just detect them.
 

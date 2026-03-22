@@ -6,6 +6,8 @@ const COLOR_MODES = [
   "monochromacy",
 ];
 
+const MOTOR_MODES = ["none", "mouse", "full"];
+
 const extensionState = {
   visual: {
     blur: {
@@ -14,6 +16,11 @@ const extensionState = {
     },
     colorBlindness: {
       enabled: false,
+      mode: "none",
+    },
+  },
+  motor: {
+    blocker: {
       mode: "none",
     },
   },
@@ -34,6 +41,12 @@ function normalizeBlurState(blur) {
   };
 }
 
+function refreshBadgeForActiveTab() {
+  getStoredState().then((storedState) => {
+    updateActionNotification(storedState);
+  });
+}
+
 function normalizeColorBlindnessState(colorBlindness) {
   const requestedMode = String(colorBlindness?.mode ?? "none").toLowerCase();
   const mode = COLOR_MODES.includes(requestedMode) ? requestedMode : "none";
@@ -43,6 +56,12 @@ function normalizeColorBlindnessState(colorBlindness) {
     enabled,
     mode,
   };
+}
+
+function normalizeMotorBlockerState(blocker) {
+  const requestedMode = String(blocker?.mode ?? "none").toLowerCase();
+  const mode = MOTOR_MODES.includes(requestedMode) ? requestedMode : "none";
+  return { mode };
 }
 
 function normalizeUrlRule(value) {
@@ -87,14 +106,40 @@ function normalizeScope(scope) {
   };
 }
 
+function doesUrlMatchRule(tabUrl, rule) {
+  if (!tabUrl || !rule) return false;
+  try {
+    const current = new URL(tabUrl);
+    const ruleUrl = new URL(rule);
+    if (current.origin !== ruleUrl.origin) return false;
+    return (
+      ruleUrl.pathname === "/" || current.pathname.startsWith(ruleUrl.pathname)
+    );
+  } catch {
+    return false;
+  }
+}
+
+function isTabAllowed(tabUrl, state) {
+  const allowedUrls = state?.scope?.allowedUrls ?? [];
+  if (!Array.isArray(allowedUrls) || allowedUrls.length === 0) {
+    return false;
+  }
+  return allowedUrls.some((rule) => doesUrlMatchRule(tabUrl, rule));
+}
+
 function mergeWithDefaultState(state) {
   const incomingBlur = state?.visual?.blur;
   const incomingColorBlindness = state?.visual?.colorBlindness;
+  const incomingMotorBlocker = state?.motor?.blocker;
   const incomingScope = state?.scope;
   return {
     visual: {
       blur: normalizeBlurState(incomingBlur),
       colorBlindness: normalizeColorBlindnessState(incomingColorBlindness),
+    },
+    motor: {
+      blocker: normalizeMotorBlockerState(incomingMotorBlocker),
     },
     scope: normalizeScope(incomingScope),
   };
@@ -125,19 +170,35 @@ function sendStateToTab(tabId, state) {
 function updateActionNotification(state) {
   const blurEnabled = Number(Boolean(state?.visual?.blur?.enabled));
   const colorEnabled = Number(Boolean(state?.visual?.colorBlindness?.enabled));
-  const activeCount = blurEnabled + colorEnabled;
+  const motorEnabled = Number(
+    (state?.motor?.blocker?.mode ?? "none") !== "none",
+  );
+  const activeCount = blurEnabled + colorEnabled + motorEnabled;
 
-  if (activeCount > 0) {
-    chrome.action.setBadgeText({ text: String(activeCount) });
-    chrome.action.setBadgeBackgroundColor({ color: "#1f8b4c" });
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const activeTab = tabs?.[0];
+    const tabAllowed = activeTab?.url
+      ? isTabAllowed(activeTab.url, state)
+      : false;
+    const badgeColor = tabAllowed ? "#1f8b4c" : "#6b7280";
+
+    if (activeCount > 0) {
+      chrome.action.setBadgeText({ text: String(activeCount) });
+      chrome.action.setBadgeBackgroundColor({ color: badgeColor });
+      chrome.action.setTitle({
+        title: tabAllowed
+          ? `Muta7 (${activeCount} simulation(s) active on this site)`
+          : `Muta7 (${activeCount} simulation(s) configured; not active on this site)`,
+      });
+      return;
+    }
+
+    chrome.action.setBadgeText({ text: "" });
+    chrome.action.setBadgeBackgroundColor({ color: badgeColor });
     chrome.action.setTitle({
-      title: `Muta7 (${activeCount} simulation(s) active)`,
+      title: tabAllowed ? "Muta7 (allowed on this site)" : "Muta7",
     });
-    return;
-  }
-
-  chrome.action.setBadgeText({ text: "" });
-  chrome.action.setTitle({ title: "Muta7" });
+  });
 }
 
 function toOrigin(url) {
@@ -159,12 +220,47 @@ chrome.runtime.onStartup.addListener(() => {
   });
 });
 
+chrome.tabs.onActivated.addListener(() => {
+  refreshBadgeForActiveTab();
+});
+
+chrome.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
+  if (tab.active && changeInfo.status === "complete") {
+    refreshBadgeForActiveTab();
+  }
+});
+
+chrome.windows.onFocusChanged.addListener(() => {
+  refreshBadgeForActiveTab();
+});
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "GET_STATE") {
     getStoredState().then((storedState) => {
       updateActionNotification(storedState);
       sendResponse({ extensionState: storedState });
     });
+    return true;
+  }
+
+  if (message?.type === "SET_MOTOR_BLOCKER_STATE") {
+    getStoredState()
+      .then((storedState) => {
+        const nextState = {
+          ...storedState,
+          motor: {
+            ...storedState.motor,
+            blocker: normalizeMotorBlockerState(message.blocker),
+          },
+        };
+
+        return setStoredState(nextState).then(() => nextState);
+      })
+      .then((nextState) => {
+        updateActionNotification(nextState);
+        sendStateToTab(message.tabId, nextState);
+        sendResponse({ ok: true, extensionState: nextState });
+      });
     return true;
   }
 

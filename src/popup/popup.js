@@ -3,6 +3,7 @@ const blurIntensityEl = document.getElementById("blur-intensity");
 const blurIntensityValueEl = document.getElementById("blur-intensity-value");
 const colorEnabledEl = document.getElementById("color-blindness-enabled");
 const colorModeEl = document.getElementById("color-blindness-mode");
+const motorModeEl = document.getElementById("motor-mode");
 const settingsReminderEl = document.getElementById("settings-reminder");
 const enableCurrentSiteEl = document.getElementById("enable-current-site");
 const allowedUrlsEl = document.getElementById("allowed-urls");
@@ -31,7 +32,9 @@ function normalizeColorMode(mode) {
 }
 
 function updateReminderBanner() {
-  const anyEnabled = blurEnabledEl.checked || colorEnabledEl.checked;
+  const motorActive = motorModeEl.value !== "none";
+  const anyEnabled =
+    blurEnabledEl.checked || colorEnabledEl.checked || motorActive;
   settingsReminderEl.hidden = !anyEnabled;
 }
 
@@ -83,6 +86,7 @@ function setScopeUi(scope) {
 function setUi(state) {
   const blur = readBlurFromState(state);
   const color = readColorFromState(state);
+  const motorMode = state?.motor?.blocker?.mode ?? "none";
   const scope = readScopeFromState(state);
   const intensity = Math.max(0, Math.min(100, Number(blur.intensity) || 0));
   blurEnabledEl.checked = Boolean(blur.enabled);
@@ -91,6 +95,7 @@ function setUi(state) {
   colorEnabledEl.checked = Boolean(color.enabled);
   colorModeEl.value = normalizeColorMode(color.mode);
   colorModeEl.disabled = !colorEnabledEl.checked;
+  motorModeEl.value = motorMode;
   setScopeUi(scope);
   updateReminderBanner();
 }
@@ -108,6 +113,12 @@ function currentColorBlindnessFromUi() {
   return {
     enabled,
     mode: enabled ? mode : "none",
+  };
+}
+
+function currentMotorBlockerFromUi() {
+  return {
+    mode: motorModeEl.value,
   };
 }
 
@@ -156,6 +167,22 @@ function sendMessage(message) {
     chrome.runtime.sendMessage(message, (response) => {
       resolve(response);
     });
+  });
+}
+
+function sendMotorUpdate() {
+  return new Promise(async (resolve) => {
+    const tabId = activeTabId ?? (await getActiveTabId());
+    const blocker = currentMotorBlockerFromUi();
+
+    chrome.runtime.sendMessage(
+      {
+        type: "SET_MOTOR_BLOCKER_STATE",
+        tabId,
+        blocker,
+      },
+      () => resolve(),
+    );
   });
 }
 
@@ -241,6 +268,12 @@ colorModeEl.addEventListener("change", () => {
   markNeedsRefresh();
 });
 
+motorModeEl.addEventListener("change", () => {
+  updateReminderBanner();
+  sendMotorUpdate();
+  markNeedsRefresh();
+});
+
 allowedUrlsEl.addEventListener("input", () => {
   markNeedsRefresh();
 });
@@ -270,9 +303,10 @@ async function resetSimulations() {
   colorEnabledEl.checked = false;
   colorModeEl.value = "none";
   colorModeEl.disabled = true;
+  motorModeEl.value = "none";
   updateReminderBanner();
 
-  await Promise.all([sendBlurUpdate(), sendColorUpdate()]);
+  await Promise.all([sendBlurUpdate(), sendColorUpdate(), sendMotorUpdate()]);
 
   const response = await sendMessage({ type: "GET_STATE" });
   if (response?.extensionState) {
