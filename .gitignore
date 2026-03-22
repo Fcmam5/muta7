@@ -1,0 +1,58 @@
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Dependency directories (if you ever add package.json)
+node_modules/
+
+# Build outputs (if you ever add build steps)
+dist/
+build/
+
+# Temporary files
+tmp/
+temp/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Archive artifacts
+*.zip
+*.tar.gz
+*.tgz
+
+# Chromium extension development artifacts
+*.crx
+*.pem
+extension.pem
+
+# Test artifacts
+test-results/
+coverage/
+
+notes.md
+TODOs.md

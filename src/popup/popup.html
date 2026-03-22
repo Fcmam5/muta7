@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Muta7</title>
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <main aria-labelledby="popup-title">
+      <h1 id="popup-title">Muta7</h1>
+      <p
+        id="settings-reminder"
+        class="reminder-banner"
+        role="status"
+        aria-live="polite"
+        hidden
+      >
+        Reminder: one or more simulations are currently enabled.
+      </p>
+      <button id="reset-all" type="button" class="button-secondary">
+        Reset / disable simulations
+      </button>
+      <section
+        class="control-group"
+        aria-labelledby="blur-controls-heading"
+        aria-describedby="blur-controls-help"
+      >
+        <h2 id="blur-controls-heading" class="section-heading">
+          Blur simulation
+        </h2>
+        <p id="blur-controls-help" class="field-hint">
+          Toggle blur and adjust intensity to simulate low-vision experiences.
+        </p>
+        <label class="toggle-row" for="blur-enabled">
+          <span>Enable blur filter</span>
+          <input id="blur-enabled" type="checkbox" />
+        </label>
+        <label for="blur-intensity">Intensity</label>
+        <p id="blur-intensity-help" class="field-hint">
+          Use arrow keys for fine control. Current value is shown alongside the
+          slider.
+        </p>
+        <div class="slider-row">
+          <input
+            id="blur-intensity"
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            value="30"
+            aria-describedby="blur-intensity-help blur-intensity-value"
+          />
+          <output id="blur-intensity-value" for="blur-intensity">30</output>
+        </div>
+      </section>
+
+      <section
+        class="control-group"
+        aria-labelledby="color-controls-heading"
+        aria-describedby="color-controls-help"
+      >
+        <h2 id="color-controls-heading" class="section-heading">
+          Color blindness filter
+        </h2>
+        <p id="color-controls-help" class="field-hint">
+          Simulate common color perception differences.
+        </p>
+        <label class="toggle-row" for="color-blindness-enabled">
+          <span>Enable color filter</span>
+          <input id="color-blindness-enabled" type="checkbox" />
+        </label>
+        <label for="color-blindness-mode">Filter mode</label>
+        <select id="color-blindness-mode">
+          <option value="none">None</option>
+          <option value="protanopia">Protanopia</option>
+          <option value="deuteranopia">Deuteranopia</option>
+          <option value="tritanopia">Tritanopia</option>
+          <option value="monochromacy">Monochromacy</option>
+        </select>
+      </section>
+
+      <section class="control-group" aria-labelledby="scope-heading">
+        <h2 id="scope-heading" class="section-heading">Website scope</h2>
+        <button id="enable-current-site" type="button" class="button-secondary">
+          Enable for current website
+        </button>
+        <label for="allowed-urls">Enable for URLs (one per line)</label>
+        <p id="allowed-urls-help" class="field-hint">
+          Enter domains or full URLs. Each rule is matched exactly as typed.
+        </p>
+        <textarea
+          id="allowed-urls"
+          rows="4"
+          placeholder="https://example.com
+https://app.example.com/settings"
+          aria-describedby="allowed-urls-help"
+        ></textarea>
+        <button id="save-allowed-urls" type="button" class="button-primary">
+          Save URLs
+        </button>
+      </section>
+
+      <section
+        id="refresh-notice"
+        class="refresh-notice"
+        role="status"
+        aria-live="polite"
+        hidden
+      >
+        <p>
+          Settings have changed. Refresh this tab to fully apply the change.
+        </p>
+        <button id="refresh-page" type="button" class="button-primary">
+          Refresh this page
+        </button>
+      </section>
+    </main>
+    <script type="module" src="./popup.js"></script>
+  </body>
+</html>

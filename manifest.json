@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Muta7",
+  "version": "0.1.0",
+  "description": "Accessibility impairment simulation extension for developer UX testing.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "homepage_url": "https://github.com/fcmam5/muta7",
+  "background": {
+    "service_worker": "src/background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "src/modules/visual/filter-stack.js",
+        "src/modules/visual/blur.js",
+        "src/modules/visual/colorblindness.js",
+        "src/content/index.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Muta7",
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/muta7-logo.png",
+      "32": "icons/muta7-logo.png",
+      "48": "icons/muta7-logo.png",
+      "128": "icons/muta7-logo.png"
+    }
+  },
+  "icons": {
+    "16": "icons/muta7-logo.png",
+    "32": "icons/muta7-logo.png",
+    "48": "icons/muta7-logo.png",
+    "128": "icons/muta7-logo.png"
+  }
+}
