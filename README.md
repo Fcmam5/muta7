@@ -113,8 +113,12 @@ muta7/
 │   ├── content/             # Content scripts
 │   │   └── index.js
 │   ├── modules/            # Simulation modules
-│   │   └── visual/
-│   │       └── blur.js
+│   │   ├── visual/         # Visual impairments
+│   │   │   ├── blur.js
+│   │   │   ├── colorblindness.js
+│   │   │   └── filter-stack.js
+│   │   └── motor/          # Motor impairments
+│   │       └── blocker.js
 │   └── popup/              # Extension popup
 │       ├── popup.html
 │       ├── popup.css
