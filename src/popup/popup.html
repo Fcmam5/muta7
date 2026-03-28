@@ -16,147 +16,379 @@
         aria-live="polite"
         hidden
       >
-        Reminder: one or more simulations are currently enabled.
+        <span class="reminder-text"
+          >Reminder: one or more simulations are currently enabled.</span
+        >
+        <button id="reset-reminder" type="button" class="reset-link">
+          Reset&nbsp;all
+        </button>
       </p>
-      <button id="reset-all" type="button" class="button-secondary">
-        Reset / disable simulations
-      </button>
-      <section
-        class="control-group"
-        aria-labelledby="blur-controls-heading"
-        aria-describedby="blur-controls-help"
-      >
-        <h2 id="blur-controls-heading" class="section-heading">
-          Blur simulation
-        </h2>
-        <p id="blur-controls-help" class="field-hint">
-          Toggle blur and adjust intensity to simulate low-vision experiences.
-        </p>
-        <label class="toggle-row" for="blur-enabled">
-          <span>Enable blur filter</span>
-          <input id="blur-enabled" type="checkbox" />
-        </label>
-        <label for="blur-intensity">Intensity</label>
-        <p id="blur-intensity-help" class="field-hint">
-          Use arrow keys for fine control. Current value is shown alongside the
-          slider.
-        </p>
-        <div class="slider-row">
-          <input
-            id="blur-intensity"
-            type="range"
-            min="0"
-            max="100"
-            step="1"
-            value="30"
-            aria-describedby="blur-intensity-help blur-intensity-value"
-          />
-          <output id="blur-intensity-value" for="blur-intensity">30</output>
-        </div>
-      </section>
 
-      <section
-        class="control-group"
-        aria-labelledby="color-controls-heading"
-        aria-describedby="color-controls-help"
-      >
-        <h2 id="color-controls-heading" class="section-heading">
-          Color blindness filter
-        </h2>
-        <p id="color-controls-help" class="field-hint">
-          Simulate common color perception differences.
-        </p>
-        <label class="toggle-row" for="color-blindness-enabled">
-          <span>Enable color filter</span>
-          <input id="color-blindness-enabled" type="checkbox" />
-        </label>
-        <label for="color-blindness-mode">Filter mode</label>
-        <select id="color-blindness-mode">
-          <option value="none">None</option>
-          <option value="protanopia">Protanopia</option>
-          <option value="deuteranopia">Deuteranopia</option>
-          <option value="tritanopia">Tritanopia</option>
-          <option value="monochromacy">Monochromacy</option>
-        </select>
-      </section>
-
-      <section
-        class="control-group"
-        aria-labelledby="motor-controls-heading"
-        aria-describedby="motor-controls-help"
-      >
-        <h2 id="motor-controls-heading" class="section-heading">
-          Motor disability simulation
-        </h2>
-        <p id="motor-controls-help" class="field-hint">
-          Block mouse and/or keyboard input to mimic voice-only navigation
-          setups.
-        </p>
-        <label for="motor-mode">Interaction mode</label>
-        <select id="motor-mode">
-          <option value="none">Allow mouse & keyboard</option>
-          <option value="mouse">Disable mouse (pointer)</option>
-          <option value="full">Disable mouse & keyboard</option>
-        </select>
-      </section>
-
-      <section
-        class="control-group"
-        aria-labelledby="hearing-controls-heading"
-        aria-describedby="hearing-controls-help"
-      >
-        <h2 id="hearing-controls-heading" class="section-heading">
-          Hearing simulation
-        </h2>
-        <p id="hearing-controls-help" class="field-hint">
-          Simulate deaf, hard-of-hearing, or noisy environments to experience
-          audio friction.
-        </p>
-        <label for="hearing-mode">Audio mode</label>
-        <select id="hearing-mode" aria-describedby="hearing-level-help">
-          <option value="none">Allow all audio</option>
-          <option value="deaf">Deaf (mute all audio)</option>
-          <option value="hard">Hard of hearing (reduced & muffled)</option>
-        </select>
-        <label for="hearing-level">Volume reduction level</label>
-        <p id="hearing-level-help" class="field-hint">
-          Adjust how much the sound is reduced when "Hard of hearing" is
-          selected.
-        </p>
-        <div class="slider-row">
-          <input
-            id="hearing-level"
-            type="range"
-            min="0"
-            max="100"
-            step="5"
-            value="60"
-            aria-describedby="hearing-level-help hearing-level-value"
-          />
-          <output id="hearing-level-value" for="hearing-level">60</output>
-        </div>
-      </section>
-
-      <section class="control-group" aria-labelledby="scope-heading">
-        <h2 id="scope-heading" class="section-heading">Website scope</h2>
-        <button id="enable-current-site" type="button" class="button-secondary">
-          Enable for current website
+      <!-- Main Navigation -->
+      <div class="main-navigation" role="tablist">
+        <button
+          class="nav-button active"
+          role="tab"
+          data-page="presets"
+          aria-selected="true"
+        >
+          <span class="nav-icon">👤</span>
+          <span class="nav-label">Presets</span>
         </button>
-        <label for="allowed-urls">Enable for URLs (one per line)</label>
-        <p id="allowed-urls-help" class="field-hint">
-          Enter domains or full URLs. Each rule is matched exactly as typed.
-        </p>
-        <textarea
-          id="allowed-urls"
-          rows="4"
-          placeholder="https://example.com
-https://app.example.com/settings"
-          aria-describedby="allowed-urls-help"
-        ></textarea>
-        <button id="save-allowed-urls" type="button" class="button-primary">
-          Save URLs
+        <button
+          class="nav-button"
+          role="tab"
+          data-page="disabilities"
+          aria-selected="false"
+        >
+          <span class="nav-icon">♿</span>
+          <span class="nav-label">Disabilities</span>
+          <span class="nav-badge active-count hidden" id="disabilities-count"
+            >0</span
+          >
         </button>
-      </section>
+        <button
+          class="nav-button"
+          role="tab"
+          data-page="scope"
+          aria-selected="false"
+        >
+          <span class="nav-icon">🌐</span>
+          <span class="nav-label">Scope</span>
+          <span
+            class="nav-badge url-indicator hidden"
+            id="scope-indicator"
+          ></span>
+        </button>
+      </div>
+
+      <!-- Page Content -->
+      <div class="page-content">
+        <!-- Presets Page -->
+        <div class="page-panel active" id="presets-page" role="tabpanel">
+          <div class="page-header">
+            <h2>Persona Presets</h2>
+            <p class="page-description">
+              Quickly simulate real-world accessibility scenarios
+            </p>
+          </div>
+
+          <div class="presets-grid">
+            <button class="preset-card" data-preset="elderly">
+              <div class="preset-icon">👵</div>
+              <div class="preset-title">Elderly User</div>
+              <div class="preset-description">
+                Age-related vision and motor changes
+              </div>
+            </button>
+
+            <button class="preset-card" data-preset="colorblind">
+              <div class="preset-icon">🎨</div>
+              <div class="preset-title">Colorblind User</div>
+              <div class="preset-description">
+                Various color vision deficiencies
+              </div>
+            </button>
+
+            <button class="preset-card" data-preset="motor-impaired">
+              <div class="preset-icon">♿</div>
+              <div class="preset-title">Motor Impaired</div>
+              <div class="preset-description">
+                Limited motor control, voice navigation
+              </div>
+            </button>
+
+            <button class="preset-card" data-preset="low-vision">
+              <div class="preset-icon">🔍</div>
+              <div class="preset-title">Low Vision</div>
+              <div class="preset-description">
+                Significant visual impairment
+              </div>
+            </button>
+
+            <button class="preset-card" data-preset="deaf">
+              <div class="preset-icon">🔇</div>
+              <div class="preset-title">Deaf User</div>
+              <div class="preset-description">Complete hearing loss</div>
+            </button>
+
+            <button class="preset-card" data-preset="adhd">
+              <div class="preset-icon">💭</div>
+              <div class="preset-title">ADHD User</div>
+              <div class="preset-description">
+                Attention and focus challenges
+              </div>
+            </button>
+          </div>
+
+          <div class="preset-actions">
+            <button id="reset-all" type="button" class="button-secondary">
+              Reset All Settings
+            </button>
+            <button
+              id="debug-reset"
+              type="button"
+              class="button-primary"
+              style="background: #ff6b6b"
+            >
+              DEBUG: Force Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- Disabilities Page -->
+        <div class="page-panel" id="disabilities-page" role="tabpanel" hidden>
+          <div class="page-header">
+            <h2>Disability Simulations</h2>
+            <p class="page-description">
+              Configure individual disability simulations
+            </p>
+          </div>
+
+          <!-- Disability Tab Navigation -->
+          <div class="tab-navigation" role="tablist">
+            <button
+              class="tab-button active"
+              role="tab"
+              data-tab="visual"
+              aria-selected="true"
+            >
+              <span class="tab-icon">👁️</span>
+              <span class="tab-label">Visual</span>
+              <span class="tab-badge hidden" id="visual-count">0</span>
+            </button>
+            <button
+              class="tab-button"
+              role="tab"
+              data-tab="motor"
+              aria-selected="false"
+            >
+              <span class="tab-icon">🖐️</span>
+              <span class="tab-label">Motor</span>
+              <span class="tab-badge hidden" id="motor-count">0</span>
+            </button>
+            <button
+              class="tab-button"
+              role="tab"
+              data-tab="hearing"
+              aria-selected="false"
+            >
+              <span class="tab-icon">👂</span>
+              <span class="tab-label">Hearing</span>
+              <span class="tab-badge hidden" id="hearing-count">0</span>
+            </button>
+            <button
+              class="tab-button"
+              role="tab"
+              data-tab="cognitive"
+              aria-selected="false"
+            >
+              <span class="tab-icon">🧠</span>
+              <span class="tab-label">Cognitive</span>
+              <span
+                class="tab-badge indicator hidden"
+                id="cognitive-indicator"
+              ></span>
+            </button>
+          </div>
+
+          <!-- Disability Tab Content -->
+          <div class="tab-content">
+            <!-- Visual Tab -->
+            <div class="tab-panel active" id="visual-panel" role="tabpanel">
+              <section
+                class="control-group"
+                aria-labelledby="blur-controls-heading"
+              >
+                <h3 id="blur-controls-heading" class="control-title">
+                  Blur Simulation
+                </h3>
+                <p class="control-description">
+                  Toggle blur and adjust intensity to simulate low-vision
+                  experiences.
+                </p>
+                <label class="toggle-row" for="blur-enabled">
+                  <span>Enable blur filter</span>
+                  <input id="blur-enabled" type="checkbox" />
+                </label>
+                <label for="blur-intensity" class="slider-label"
+                  >Intensity</label
+                >
+                <p id="blur-intensity-help" class="field-hint">
+                  Use arrow keys for fine control. Current value is shown
+                  alongside the slider.
+                </p>
+                <div class="slider-row">
+                  <input
+                    id="blur-intensity"
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value="30"
+                    aria-describedby="blur-intensity-help blur-intensity-value"
+                  />
+                  <output id="blur-intensity-value" for="blur-intensity"
+                    >30</output
+                  >
+                </div>
+              </section>
+
+              <section
+                class="control-group"
+                aria-labelledby="color-controls-heading"
+              >
+                <h3 id="color-controls-heading" class="control-title">
+                  Color Blindness Filter
+                </h3>
+                <p class="control-description">
+                  Simulate common color perception differences.
+                </p>
+                <label class="toggle-row" for="color-blindness-enabled">
+                  <span>Enable color filter</span>
+                  <input id="color-blindness-enabled" type="checkbox" />
+                </label>
+                <label for="color-blindness-mode">Filter mode</label>
+                <select id="color-blindness-mode">
+                  <option value="none">None</option>
+                  <option value="protanopia">Protanopia</option>
+                  <option value="deuteranopia">Deuteranopia</option>
+                  <option value="tritanopia">Tritanopia</option>
+                  <option value="monochromacy">Monochromacy</option>
+                </select>
+              </section>
+            </div>
+
+            <!-- Motor Tab -->
+            <div class="tab-panel" id="motor-panel" role="tabpanel" hidden>
+              <section
+                class="control-group"
+                aria-labelledby="motor-controls-heading"
+              >
+                <h3 id="motor-controls-heading" class="control-title">
+                  Motor Disability Simulation
+                </h3>
+                <p class="control-description">
+                  Block mouse and/or keyboard input to mimic voice-only
+                  navigation setups.
+                </p>
+                <label for="motor-mode">Interaction mode</label>
+                <select id="motor-mode">
+                  <option value="none">Allow mouse & keyboard</option>
+                  <option value="mouse">Disable mouse (pointer)</option>
+                  <option value="full">Disable mouse & keyboard</option>
+                </select>
+              </section>
+            </div>
+
+            <!-- Hearing Tab -->
+            <div class="tab-panel" id="hearing-panel" role="tabpanel" hidden>
+              <section
+                class="control-group"
+                aria-labelledby="hearing-controls-heading"
+              >
+                <h3 id="hearing-controls-heading" class="control-title">
+                  Hearing Simulation
+                </h3>
+                <p class="control-description">
+                  Simulate deaf, hard-of-hearing, or noisy environments to
+                  experience audio friction.
+                </p>
+                <label for="hearing-mode">Audio mode</label>
+                <select id="hearing-mode" aria-describedby="hearing-level-help">
+                  <option value="none">Allow all audio</option>
+                  <option value="deaf">Deaf (mute all audio)</option>
+                  <option value="hard">
+                    Hard of hearing (reduced & muffled)
+                  </option>
+                </select>
+                <label for="hearing-level">Volume reduction level</label>
+                <p id="hearing-level-help" class="field-hint">
+                  Adjust how much the sound is reduced when "Hard of hearing" is
+                  selected.
+                </p>
+                <div class="slider-row">
+                  <input
+                    id="hearing-level"
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value="60"
+                    aria-describedby="hearing-level-help hearing-level-value"
+                  />
+                  <output id="hearing-level-value" for="hearing-level"
+                    >60</output
+                  >
+                </div>
+              </section>
+            </div>
+
+            <!-- Cognitive Tab -->
+            <div class="tab-panel" id="cognitive-panel" role="tabpanel" hidden>
+              <div class="coming-soon">
+                <div class="coming-soon-icon">🚧</div>
+                <h3>Coming Soon</h3>
+                <p>
+                  Cognitive disability simulations will be available in future
+                  updates.
+                </p>
+                <ul>
+                  <li>ADHD attention simulation</li>
+                  <li>Dyslexia reading simulation</li>
+                  <li>Autism sensory processing</li>
+                  <li>Memory impairment simulation</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="preset-actions">
+            <button
+              id="reset-all-disabilities"
+              type="button"
+              class="button-secondary"
+            >
+              Reset All Settings
+            </button>
+          </div>
+        </div>
+
+        <!-- Scope Page -->
+        <div class="page-panel" id="scope-page" role="tabpanel" hidden>
+          <div class="page-header">
+            <h2>Website Scope</h2>
+            <p class="page-description">
+              Control where simulations are applied
+            </p>
+          </div>
+
+          <section class="control-group">
+            <button
+              id="enable-current-site"
+              type="button"
+              class="button-secondary"
+            >
+              Enable for current website
+            </button>
+            <label for="allowed-urls">Enable for URLs (one per line)</label>
+            <p id="allowed-urls-help" class="field-hint">
+              Enter domains or full URLs. Each rule is matched exactly as typed.
+            </p>
+            <textarea
+              id="allowed-urls"
+              rows="4"
+              placeholder="https://example.com&#10;https://app.example.com/settings"
+              aria-describedby="allowed-urls-help"
+            ></textarea>
+          </section>
+
+          <div class="preset-actions">
+            <button id="reset-all-scope" type="button" class="button-secondary">
+              Reset All Settings
+            </button>
+          </div>
+        </div>
+      </div>
 
       <section
         id="refresh-notice"

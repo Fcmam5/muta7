@@ -1,3 +1,146 @@
+// Main navigation functionality
+const navButtons = document.querySelectorAll(".nav-button");
+const pagePanels = document.querySelectorAll(".page-panel");
+
+function switchPage(pageName) {
+  // Update nav buttons
+  navButtons.forEach((button) => {
+    const isActive = button.dataset.page === pageName;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-selected", isActive);
+  });
+
+  // Update page panels
+  pagePanels.forEach((panel) => {
+    const isActive = panel.id === `${pageName}-page`;
+    panel.classList.toggle("active", isActive);
+    panel.hidden = !isActive;
+  });
+}
+
+// Add main navigation event listeners
+navButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    switchPage(button.dataset.page);
+  });
+});
+
+// Tab navigation functionality (for disabilities page)
+const tabButtons = document.querySelectorAll(".tab-button");
+const tabPanels = document.querySelectorAll(".tab-panel");
+
+function switchDisabilityTab(tabName) {
+  // Update tab buttons
+  tabButtons.forEach((button) => {
+    const isActive = button.dataset.tab === tabName;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-selected", isActive);
+  });
+
+  // Update tab panels
+  tabPanels.forEach((panel) => {
+    const isActive = panel.id === `${tabName}-panel`;
+    panel.classList.toggle("active", isActive);
+    panel.hidden = !isActive;
+  });
+}
+
+// Add tab switching event listeners
+tabButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    switchDisabilityTab(button.dataset.tab);
+  });
+});
+
+// Preset functionality
+const presetCards = document.querySelectorAll(".preset-card");
+
+const PRESETS = {
+  elderly: {
+    blur: { enabled: true, intensity: 40 },
+    colorBlindness: { enabled: false, mode: "none" },
+    motor: { mode: "mouse" },
+    hearing: { mode: "hard", level: 70 },
+  },
+  colorblind: {
+    blur: { enabled: false, intensity: 0 },
+    colorBlindness: { enabled: true, mode: "deuteranopia" },
+    motor: { mode: "none" },
+    hearing: { mode: "none", level: 60 },
+  },
+  "motor-impaired": {
+    blur: { enabled: false, intensity: 0 },
+    colorBlindness: { enabled: false, mode: "none" },
+    motor: { mode: "full" },
+    hearing: { mode: "none", level: 60 },
+  },
+  "low-vision": {
+    blur: { enabled: true, intensity: 70 },
+    colorBlindness: { enabled: false, mode: "none" },
+    motor: { mode: "none" },
+    hearing: { mode: "none", level: 60 },
+  },
+  deaf: {
+    blur: { enabled: false, intensity: 0 },
+    colorBlindness: { enabled: false, mode: "none" },
+    motor: { mode: "none" },
+    hearing: { mode: "deaf", level: 60 },
+  },
+  adhd: {
+    blur: { enabled: false, intensity: 0 },
+    colorBlindness: { enabled: false, mode: "none" },
+    motor: { mode: "none" },
+    hearing: { mode: "none", level: 60 },
+  },
+};
+
+function applyPreset(presetName) {
+  const preset = PRESETS[presetName];
+  if (!preset) return;
+
+  // Update UI based on preset
+  blurEnabledEl.checked = preset.blur.enabled;
+  blurIntensityEl.value = preset.blur.intensity;
+  blurIntensityValueEl.value = preset.blur.intensity;
+
+  colorEnabledEl.checked = preset.colorBlindness.enabled;
+  colorModeEl.value = preset.colorBlindness.mode;
+  colorModeEl.disabled = !preset.colorBlindness.enabled;
+
+  motorModeEl.value = preset.motor.mode;
+
+  hearingModeEl.value = preset.hearing.mode;
+  hearingLevelEl.value = preset.hearing.level;
+  hearingLevelValueEl.value = preset.hearing.level;
+  hearingLevelEl.disabled = preset.hearing.mode !== "hard";
+
+  // Update visual state
+  updateReminderBanner();
+
+  // Send updates to background
+  Promise.all([
+    sendBlurUpdate(),
+    sendColorUpdate(),
+    sendMotorUpdate(),
+    sendHearingUpdate(),
+  ]);
+
+  markNeedsRefresh();
+
+  // Update preset card visual state
+  presetCards.forEach((card) => {
+    card.classList.toggle("active", card.dataset.preset === presetName);
+  });
+}
+
+// Add preset event listeners
+presetCards.forEach((card) => {
+  card.addEventListener("click", () => {
+    applyPreset(card.dataset.preset);
+  });
+});
+
+// Original element references
 const blurEnabledEl = document.getElementById("blur-enabled");
 const blurIntensityEl = document.getElementById("blur-intensity");
 const blurIntensityValueEl = document.getElementById("blur-intensity-value");
@@ -8,12 +151,27 @@ const hearingModeEl = document.getElementById("hearing-mode");
 const hearingLevelEl = document.getElementById("hearing-level");
 const hearingLevelValueEl = document.getElementById("hearing-level-value");
 const settingsReminderEl = document.getElementById("settings-reminder");
+const resetReminderEl = document.getElementById("reset-reminder");
 const enableCurrentSiteEl = document.getElementById("enable-current-site");
 const allowedUrlsEl = document.getElementById("allowed-urls");
-const saveAllowedUrlsEl = document.getElementById("save-allowed-urls");
 const refreshNoticeEl = document.getElementById("refresh-notice");
 const refreshPageEl = document.getElementById("refresh-page");
 const resetAllEl = document.getElementById("reset-all");
+const resetAllDisabilitiesEl = document.getElementById(
+  "reset-all-disabilities",
+);
+const resetAllScopeEl = document.getElementById("reset-all-scope");
+const debugResetEl = document.getElementById("debug-reset");
+
+// Badge elements
+const disabilitiesCountEl = document.getElementById("disabilities-count");
+const scopeIndicatorEl = document.getElementById("scope-indicator");
+
+// Individual disability badge elements
+const visualCountEl = document.getElementById("visual-count");
+const motorCountEl = document.getElementById("motor-count");
+const hearingCountEl = document.getElementById("hearing-count");
+const cognitiveIndicatorEl = document.getElementById("cognitive-indicator");
 
 let activeTabId = null;
 let activeTabUrl = "";
@@ -51,14 +209,117 @@ function sendHearingUpdate() {
 }
 
 function updateReminderBanner() {
-  const motorActive = motorModeEl.value !== "none";
-  const hearingActive = hearingModeEl.value !== "none";
+  // Debug: Check actual UI element values
+  console.log("UI element states:", {
+    blurChecked: blurEnabledEl?.checked,
+    blurValue: blurEnabledEl?.value,
+    colorChecked: colorEnabledEl?.checked,
+    colorValue: colorEnabledEl?.value,
+    motorValue: motorModeEl?.value,
+    hearingValue: hearingModeEl?.value,
+    hearingLevelValue: hearingLevelEl?.value,
+  });
+
+  const motorActive = motorModeEl?.value !== "none";
+  const hearingActive = hearingModeEl?.value !== "none";
   const anyEnabled =
-    blurEnabledEl.checked ||
-    colorEnabledEl.checked ||
+    blurEnabledEl?.checked ||
+    false ||
+    colorEnabledEl?.checked ||
+    false ||
     motorActive ||
     hearingActive;
-  settingsReminderEl.hidden = !anyEnabled;
+
+  console.log("Reminder banner check:", {
+    blurEnabled: blurEnabledEl?.checked,
+    colorEnabled: colorEnabledEl?.checked,
+    motorActive: motorActive,
+    hearingActive: hearingActive,
+    anyEnabled: anyEnabled,
+  });
+
+  if (settingsReminderEl) {
+    const shouldHide = !anyEnabled;
+    settingsReminderEl.hidden = shouldHide;
+    console.log("Setting reminder banner hidden:", shouldHide);
+
+    // Also check the actual display state
+    setTimeout(() => {
+      console.log(
+        "Banner actual hidden state after timeout:",
+        settingsReminderEl.hidden,
+      );
+      console.log(
+        "Banner display style:",
+        window.getComputedStyle(settingsReminderEl).display,
+      );
+    }, 100);
+  }
+
+  // Update disabilities count badge
+  updateDisabilitiesBadge();
+}
+
+function updateDisabilitiesBadge() {
+  let activeCount = 0;
+
+  if (blurEnabledEl?.checked) activeCount++;
+  if (colorEnabledEl?.checked) activeCount++;
+  if (motorModeEl?.value !== "none") activeCount++;
+  if (hearingModeEl?.value !== "none") activeCount++;
+
+  if (activeCount > 0 && disabilitiesCountEl) {
+    disabilitiesCountEl.textContent = activeCount;
+    disabilitiesCountEl.classList.remove("hidden");
+  } else if (disabilitiesCountEl) {
+    disabilitiesCountEl.classList.add("hidden");
+  }
+
+  // Update individual disability badges
+  updateIndividualDisabilityBadges();
+}
+
+function updateIndividualDisabilityBadges() {
+  // Visual disabilities (blur + color blindness)
+  const visualCount =
+    (blurEnabledEl.checked ? 1 : 0) + (colorEnabledEl.checked ? 1 : 0);
+  if (visualCount > 0 && visualCountEl) {
+    visualCountEl.textContent = visualCount;
+    visualCountEl.classList.remove("hidden");
+  } else if (visualCountEl) {
+    visualCountEl.classList.add("hidden");
+  }
+
+  // Motor disabilities
+  if (motorModeEl.value !== "none" && motorCountEl) {
+    motorCountEl.textContent = "1";
+    motorCountEl.classList.remove("hidden");
+  } else if (motorCountEl) {
+    motorCountEl.classList.add("hidden");
+  }
+
+  // Hearing disabilities
+  if (hearingModeEl.value !== "none" && hearingCountEl) {
+    hearingCountEl.textContent = "1";
+    hearingCountEl.classList.remove("hidden");
+  } else if (hearingCountEl) {
+    hearingCountEl.classList.add("hidden");
+  }
+
+  // Cognitive (always show indicator for future features)
+  // For now, keep it hidden since cognitive features aren't implemented yet
+  if (cognitiveIndicatorEl) {
+    cognitiveIndicatorEl.classList.add("hidden");
+  }
+}
+
+function updateScopeBadge() {
+  const urls = parseAllowedUrlsInput(allowedUrlsEl.value);
+  if (urls.length > 0 && scopeIndicatorEl) {
+    scopeIndicatorEl.classList.remove("hidden");
+  } else if (scopeIndicatorEl) {
+    scopeIndicatorEl.classList.add("hidden");
+  }
 }
 
 function showRefreshNotice(show) {
@@ -127,6 +388,50 @@ function setUi(state) {
   hearingLevelEl.disabled = hearingModeEl.value !== "hard";
   setScopeUi(scope);
   updateReminderBanner();
+
+  // Update preset selection based on current state
+  updatePresetSelection(state);
+
+  // Update scope badge
+  updateScopeBadge();
+}
+
+function updatePresetSelection(state) {
+  const currentSettings = {
+    blur: readBlurFromState(state),
+    colorBlindness: readColorFromState(state),
+    motor: { mode: state?.motor?.blocker?.mode ?? "none" },
+    hearing: {
+      mode: state?.hearing?.simulator?.mode ?? "none",
+      level: Number(state?.hearing?.simulator?.level ?? 60),
+    },
+  };
+
+  // Check if current settings match any preset
+  let matchingPreset = null;
+  for (const [presetName, presetConfig] of Object.entries(PRESETS)) {
+    if (isSettingsMatch(currentSettings, presetConfig)) {
+      matchingPreset = presetName;
+      break;
+    }
+  }
+
+  // Update preset card visual states
+  presetCards.forEach((card) => {
+    card.classList.toggle("active", card.dataset.preset === matchingPreset);
+  });
+}
+
+function isSettingsMatch(current, preset) {
+  return (
+    current.blur.enabled === preset.blur.enabled &&
+    current.blur.intensity === preset.blur.intensity &&
+    current.colorBlindness.enabled === preset.colorBlindness.enabled &&
+    current.colorBlindness.mode === preset.colorBlindness.mode &&
+    current.motor.mode === preset.motor.mode &&
+    current.hearing.mode === preset.hearing.mode &&
+    current.hearing.level === preset.hearing.level
+  );
 }
 
 function currentBlurFromUi() {
@@ -235,22 +540,7 @@ async function enableForCurrentWebsite() {
   }
 
   markNeedsRefresh();
-}
-
-async function saveAllowedUrls() {
-  const allowedUrls = parseAllowedUrlsInput(allowedUrlsEl.value);
-  const response = await sendMessage({
-    type: "SET_ALLOWED_URLS",
-    tabId: activeTabId,
-    allowedUrls,
-  });
-
-  if (response?.extensionState) {
-    syncedState = response.extensionState;
-    setUi(response.extensionState);
-  }
-
-  updateRefreshNotice();
+  updateScopeBadge();
 }
 
 async function initializePopup() {
@@ -326,14 +616,36 @@ hearingLevelEl.addEventListener("input", () => {
 
 allowedUrlsEl.addEventListener("input", () => {
   markNeedsRefresh();
+  updateScopeBadge();
+  // Auto-save URLs when user stops typing
+  clearTimeout(allowedUrlsEl.saveTimeout);
+  allowedUrlsEl.saveTimeout = setTimeout(() => {
+    autoSaveUrls();
+  }, 1000); // Save after 1 second of no typing
 });
+
+// Auto-save URLs function
+async function autoSaveUrls() {
+  console.log("Auto-saving URLs...");
+  const allowedUrls = parseAllowedUrlsInput(allowedUrlsEl.value);
+  try {
+    const response = await sendMessage({
+      type: "SET_ALLOWED_URLS",
+      tabId: activeTabId,
+      allowedUrls,
+    });
+
+    if (response?.extensionState) {
+      syncedState = response.extensionState;
+      console.log("URLs auto-saved successfully");
+    }
+  } catch (error) {
+    console.error("Error auto-saving URLs:", error);
+  }
+}
 
 enableCurrentSiteEl.addEventListener("click", () => {
   enableForCurrentWebsite();
-});
-
-saveAllowedUrlsEl.addEventListener("click", () => {
-  saveAllowedUrls();
 });
 
 refreshPageEl.addEventListener("click", () => {
@@ -342,35 +654,162 @@ refreshPageEl.addEventListener("click", () => {
   showRefreshNotice(false);
 });
 
+// Add event listeners with debugging
 resetAllEl.addEventListener("click", () => {
+  console.log("Reset button clicked");
   resetSimulations();
 });
 
-async function resetSimulations() {
-  blurEnabledEl.checked = false;
-  blurIntensityEl.value = "0";
-  blurIntensityValueEl.value = "0";
-  colorEnabledEl.checked = false;
-  colorModeEl.value = "none";
-  colorModeEl.disabled = true;
-  motorModeEl.value = "none";
-  hearingModeEl.value = "none";
-  hearingLevelEl.value = "60";
-  hearingLevelValueEl.value = "60";
-  hearingLevelEl.disabled = true;
-  updateReminderBanner();
+if (resetReminderEl) {
+  resetReminderEl.addEventListener("click", () => {
+    console.log("Reset reminder clicked");
+    resetSimulations();
+  });
+}
 
-  await Promise.all([
-    sendBlurUpdate(),
-    sendColorUpdate(),
-    sendMotorUpdate(),
-    sendHearingUpdate(),
-  ]);
+if (resetAllDisabilitiesEl) {
+  resetAllDisabilitiesEl.addEventListener("click", () => {
+    console.log("Reset disabilities clicked");
+    resetSimulations();
+  });
+}
 
-  const response = await sendMessage({ type: "GET_STATE" });
-  if (response?.extensionState) {
-    applySyncedState(response.extensionState);
-  } else {
+if (resetAllScopeEl) {
+  resetAllScopeEl.addEventListener("click", () => {
+    console.log("Reset scope clicked");
+    resetSimulations();
+  });
+}
+
+// Debug reset button
+if (debugResetEl) {
+  debugResetEl.addEventListener("click", () => {
+    console.log("DEBUG RESET CLICKED - forcing immediate reset");
+    // Force immediate reset without any background communication
+    if (blurEnabledEl) blurEnabledEl.checked = false;
+    if (blurIntensityEl) blurIntensityEl.value = "0";
+    if (blurIntensityValueEl) blurIntensityValueEl.value = "0";
+    if (colorEnabledEl) colorEnabledEl.checked = false;
+    if (colorModeEl) {
+      colorModeEl.value = "none";
+      colorModeEl.disabled = true;
+    }
+    if (motorModeEl) motorModeEl.value = "none";
+    if (hearingModeEl) hearingModeEl.value = "none";
+    if (hearingLevelEl) hearingLevelEl.value = "60";
+    if (hearingLevelValueEl) hearingLevelValueEl.value = "60";
+    if (hearingLevelEl) hearingLevelEl.disabled = true;
+
+    // Clear presets
+    if (presetCards) {
+      presetCards.forEach((card) => {
+        card.classList.remove("active");
+      });
+    }
+
+    // Update UI
+    updateReminderBanner();
+    updateScopeBadge();
     showRefreshNotice(false);
+
+    console.log("DEBUG RESET COMPLETE - UI should be reset now");
+  });
+}
+
+async function resetSimulations() {
+  console.log("Reset simulations called");
+
+  // Reset all controls to default state
+  if (blurEnabledEl) {
+    blurEnabledEl.checked = false;
+    console.log("Blur disabled");
+  }
+  if (blurIntensityEl) {
+    blurIntensityEl.value = "0";
+    console.log("Blur intensity set to 0");
+  }
+  if (blurIntensityValueEl) {
+    blurIntensityValueEl.value = "0";
+    console.log("Blur intensity value set to 0");
+  }
+  if (colorEnabledEl) {
+    colorEnabledEl.checked = false;
+    console.log("Color disabled");
+  }
+  if (colorModeEl) {
+    colorModeEl.value = "none";
+    colorModeEl.disabled = true;
+    console.log("Color mode set to none");
+  }
+  if (motorModeEl) {
+    motorModeEl.value = "none";
+    console.log("Motor mode set to none");
+  }
+  if (hearingModeEl) {
+    hearingModeEl.value = "none";
+    console.log("Hearing mode set to none");
+  }
+  if (hearingLevelEl) {
+    hearingLevelEl.value = "60";
+    console.log("Hearing level set to 60");
+  }
+  if (hearingLevelValueEl) {
+    hearingLevelValueEl.value = "60";
+    console.log("Hearing level value set to 60");
+  }
+  if (hearingLevelEl) {
+    hearingLevelEl.disabled = true;
+    console.log("Hearing level disabled");
+  }
+
+  // Clear preset selection
+  if (presetCards) {
+    presetCards.forEach((card) => {
+      card.classList.remove("active");
+    });
+    console.log("Preset cards cleared");
+  }
+
+  // Update all badges and UI immediately
+  console.log("Updating badges and UI...");
+  updateReminderBanner();
+  updateScopeBadge();
+
+  // Send reset updates to background and wait for completion
+  try {
+    console.log("Sending reset updates to background...");
+
+    // Send each reset command individually and wait for each
+    await sendBlurUpdate();
+    console.log("Blur reset sent");
+
+    await sendColorUpdate();
+    console.log("Color reset sent");
+
+    await sendMotorUpdate();
+    console.log("Motor reset sent");
+
+    await sendHearingUpdate();
+    console.log("Hearing reset sent");
+
+    console.log("All reset updates sent successfully");
+
+    // Wait a bit for background to process
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    // Force a state refresh to ensure persistence
+    console.log("Forcing state refresh...");
+    const response = await sendMessage({ type: "GET_STATE" });
+    if (response?.extensionState) {
+      console.log("State after reset:", response.extensionState);
+      // Apply the state to ensure UI and background are in sync
+      applySyncedState(response.extensionState);
+    }
+
+    markNeedsRefresh(); // Show refresh notice so user can refresh page
+    console.log("Reset complete - showing refresh notice");
+  } catch (error) {
+    console.error("Error during reset:", error);
+    markNeedsRefresh();
   }
 }
