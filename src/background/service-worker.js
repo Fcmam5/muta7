@@ -7,6 +7,7 @@ const COLOR_MODES = [
 ];
 
 const MOTOR_MODES = ["none", "mouse", "full"];
+const HEARING_MODES = ["none", "deaf", "hard"];
 
 const extensionState = {
   visual: {
@@ -22,6 +23,12 @@ const extensionState = {
   motor: {
     blocker: {
       mode: "none",
+    },
+  },
+  hearing: {
+    simulator: {
+      mode: "none",
+      level: 60,
     },
   },
   scope: {
@@ -62,6 +69,16 @@ function normalizeMotorBlockerState(blocker) {
   const requestedMode = String(blocker?.mode ?? "none").toLowerCase();
   const mode = MOTOR_MODES.includes(requestedMode) ? requestedMode : "none";
   return { mode };
+}
+
+function normalizeHearingState(simulator) {
+  const requestedMode = String(simulator?.mode ?? "none").toLowerCase();
+  const mode = HEARING_MODES.includes(requestedMode) ? requestedMode : "none";
+  const levelValue = Number(simulator?.level ?? 60);
+  const boundedLevel = Number.isFinite(levelValue)
+    ? Math.max(0, Math.min(100, levelValue))
+    : 60;
+  return { mode, level: boundedLevel };
 }
 
 function normalizeUrlRule(value) {
@@ -132,6 +149,7 @@ function mergeWithDefaultState(state) {
   const incomingBlur = state?.visual?.blur;
   const incomingColorBlindness = state?.visual?.colorBlindness;
   const incomingMotorBlocker = state?.motor?.blocker;
+  const incomingHearing = state?.hearing?.simulator;
   const incomingScope = state?.scope;
   return {
     visual: {
@@ -140,6 +158,9 @@ function mergeWithDefaultState(state) {
     },
     motor: {
       blocker: normalizeMotorBlockerState(incomingMotorBlocker),
+    },
+    hearing: {
+      simulator: normalizeHearingState(incomingHearing),
     },
     scope: normalizeScope(incomingScope),
   };
@@ -173,7 +194,11 @@ function updateActionNotification(state) {
   const motorEnabled = Number(
     (state?.motor?.blocker?.mode ?? "none") !== "none",
   );
-  const activeCount = blurEnabled + colorEnabled + motorEnabled;
+  const hearingEnabled = Number(
+    (state?.hearing?.simulator?.mode ?? "none") !== "none",
+  );
+  const activeCount =
+    blurEnabled + colorEnabled + motorEnabled + hearingEnabled;
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const activeTab = tabs?.[0];
@@ -251,6 +276,27 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           motor: {
             ...storedState.motor,
             blocker: normalizeMotorBlockerState(message.blocker),
+          },
+        };
+
+        return setStoredState(nextState).then(() => nextState);
+      })
+      .then((nextState) => {
+        updateActionNotification(nextState);
+        sendStateToTab(message.tabId, nextState);
+        sendResponse({ ok: true, extensionState: nextState });
+      });
+    return true;
+  }
+
+  if (message?.type === "SET_HEARING_STATE") {
+    getStoredState()
+      .then((storedState) => {
+        const nextState = {
+          ...storedState,
+          hearing: {
+            ...storedState.hearing,
+            simulator: normalizeHearingState(message.simulator),
           },
         };
 

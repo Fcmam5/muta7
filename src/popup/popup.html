@@ -100,6 +100,43 @@
         </select>
       </section>
 
+      <section
+        class="control-group"
+        aria-labelledby="hearing-controls-heading"
+        aria-describedby="hearing-controls-help"
+      >
+        <h2 id="hearing-controls-heading" class="section-heading">
+          Hearing simulation
+        </h2>
+        <p id="hearing-controls-help" class="field-hint">
+          Simulate deaf, hard-of-hearing, or noisy environments to experience
+          audio friction.
+        </p>
+        <label for="hearing-mode">Audio mode</label>
+        <select id="hearing-mode" aria-describedby="hearing-level-help">
+          <option value="none">Allow all audio</option>
+          <option value="deaf">Deaf (mute all audio)</option>
+          <option value="hard">Hard of hearing (reduced & muffled)</option>
+        </select>
+        <label for="hearing-level">Volume reduction level</label>
+        <p id="hearing-level-help" class="field-hint">
+          Adjust how much the sound is reduced when "Hard of hearing" is
+          selected.
+        </p>
+        <div class="slider-row">
+          <input
+            id="hearing-level"
+            type="range"
+            min="0"
+            max="100"
+            step="5"
+            value="60"
+            aria-describedby="hearing-level-help hearing-level-value"
+          />
+          <output id="hearing-level-value" for="hearing-level">60</output>
+        </div>
+      </section>
+
       <section class="control-group" aria-labelledby="scope-heading">
         <h2 id="scope-heading" class="section-heading">Website scope</h2>
         <button id="enable-current-site" type="button" class="button-secondary">

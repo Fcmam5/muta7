@@ -18,9 +18,11 @@
         "src/modules/visual/blur.js",
         "src/modules/visual/colorblindness.js",
         "src/modules/motor/blocker.js",
+        "src/modules/hearing/simulator.js",
         "src/content/index.js"
       ],
-      "run_at": "document_idle"
+      "run_at": "document_idle",
+      "all_frames": true
     }
   ],
   "action": {

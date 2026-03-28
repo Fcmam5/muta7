@@ -4,6 +4,9 @@ const blurIntensityValueEl = document.getElementById("blur-intensity-value");
 const colorEnabledEl = document.getElementById("color-blindness-enabled");
 const colorModeEl = document.getElementById("color-blindness-mode");
 const motorModeEl = document.getElementById("motor-mode");
+const hearingModeEl = document.getElementById("hearing-mode");
+const hearingLevelEl = document.getElementById("hearing-level");
+const hearingLevelValueEl = document.getElementById("hearing-level-value");
 const settingsReminderEl = document.getElementById("settings-reminder");
 const enableCurrentSiteEl = document.getElementById("enable-current-site");
 const allowedUrlsEl = document.getElementById("allowed-urls");
@@ -31,10 +34,30 @@ function normalizeColorMode(mode) {
   return normalized;
 }
 
+function sendHearingUpdate() {
+  return new Promise(async (resolve) => {
+    const tabId = activeTabId ?? (await getActiveTabId());
+    const simulator = currentHearingStateFromUi();
+
+    chrome.runtime.sendMessage(
+      {
+        type: "SET_HEARING_STATE",
+        tabId,
+        simulator,
+      },
+      () => resolve(),
+    );
+  });
+}
+
 function updateReminderBanner() {
   const motorActive = motorModeEl.value !== "none";
+  const hearingActive = hearingModeEl.value !== "none";
   const anyEnabled =
-    blurEnabledEl.checked || colorEnabledEl.checked || motorActive;
+    blurEnabledEl.checked ||
+    colorEnabledEl.checked ||
+    motorActive ||
+    hearingActive;
   settingsReminderEl.hidden = !anyEnabled;
 }
 
@@ -87,6 +110,8 @@ function setUi(state) {
   const blur = readBlurFromState(state);
   const color = readColorFromState(state);
   const motorMode = state?.motor?.blocker?.mode ?? "none";
+  const hearingMode = state?.hearing?.simulator?.mode ?? "none";
+  const hearingLevel = Number(state?.hearing?.simulator?.level ?? 60);
   const scope = readScopeFromState(state);
   const intensity = Math.max(0, Math.min(100, Number(blur.intensity) || 0));
   blurEnabledEl.checked = Boolean(blur.enabled);
@@ -96,6 +121,10 @@ function setUi(state) {
   colorModeEl.value = normalizeColorMode(color.mode);
   colorModeEl.disabled = !colorEnabledEl.checked;
   motorModeEl.value = motorMode;
+  hearingModeEl.value = hearingMode;
+  hearingLevelEl.value = String(hearingLevel);
+  hearingLevelValueEl.value = String(hearingLevel);
+  hearingLevelEl.disabled = hearingModeEl.value !== "hard";
   setScopeUi(scope);
   updateReminderBanner();
 }
@@ -119,6 +148,13 @@ function currentColorBlindnessFromUi() {
 function currentMotorBlockerFromUi() {
   return {
     mode: motorModeEl.value,
+  };
+}
+
+function currentHearingStateFromUi() {
+  return {
+    mode: hearingModeEl.value,
+    level: Number(hearingLevelEl.value),
   };
 }
 
@@ -274,6 +310,20 @@ motorModeEl.addEventListener("change", () => {
   markNeedsRefresh();
 });
 
+hearingModeEl.addEventListener("change", () => {
+  updateReminderBanner();
+  hearingLevelEl.disabled = hearingModeEl.value !== "hard";
+  sendHearingUpdate();
+  markNeedsRefresh();
+});
+
+hearingLevelEl.addEventListener("input", () => {
+  hearingLevelValueEl.value = hearingLevelEl.value;
+  if (hearingModeEl.value !== "hard") return;
+  sendHearingUpdate();
+  markNeedsRefresh();
+});
+
 allowedUrlsEl.addEventListener("input", () => {
   markNeedsRefresh();
 });
@@ -304,9 +354,18 @@ async function resetSimulations() {
   colorModeEl.value = "none";
   colorModeEl.disabled = true;
   motorModeEl.value = "none";
+  hearingModeEl.value = "none";
+  hearingLevelEl.value = "60";
+  hearingLevelValueEl.value = "60";
+  hearingLevelEl.disabled = true;
   updateReminderBanner();
 
-  await Promise.all([sendBlurUpdate(), sendColorUpdate(), sendMotorUpdate()]);
+  await Promise.all([
+    sendBlurUpdate(),
+    sendColorUpdate(),
+    sendMotorUpdate(),
+    sendHearingUpdate(),
+  ]);
 
   const response = await sendMessage({ type: "GET_STATE" });
   if (response?.extensionState) {

@@ -15,6 +15,9 @@ Muta7 is a Chromium browser extension that simulates real-world accessibility im
   - Disable mouse/pointer interactions (cursor forced to `help`)
   - Disable both mouse and keyboard to mimic voice-only workflows
   - Applies only on websites you explicitly allow
+- **Hearing Simulation** (v0)
+  - Deaf mode mutes all audio entirely
+  - Hard-of-hearing mode reduces volume with an adjustable slider and adds muffling
 - **Website Scoping**
   - Enable only on specified websites
   - Support for origin and path-level rules
@@ -75,6 +78,7 @@ By default, Muta7 works only on websites you specify:
 - **Intensity** — Slider from 0–100
 - **Color blindness filter** — Toggle on/off with selectable modes
 - **Motor disability simulation** — Choose between “allow all,” “disable mouse,” or “disable mouse & keyboard”
+- **Hearing simulation** — Switch between “allow all,” “deaf,” or “hard of hearing,” with an adjustable reduction level
 - **Reminder banner** — Shows when any simulation is active
 - **Extension badge** — Shows active simulation count
 
@@ -84,6 +88,13 @@ By default, Muta7 works only on websites you specify:
 - Pick **Disable mouse (pointer)** to block all hover, click, scroll, and pointer events while forcing the cursor to the `help` icon
 - Pick **Disable mouse & keyboard** to also block keyboard interactions, approximating voice-only environments
 - Motor blocking automatically pauses on sites outside the allowed list so the rest of your browsing stays unaffected
+
+### Hearing simulation
+
+- Enable hearing modes only on sites you add to Website scope
+- Pick **Deaf** to mute every audio/video element and AudioContext output
+- Pick **Hard of hearing** to reduce volume (with a slider from subtle to severe reduction) and slightly muffle playback
+- Like other simulations, hearing effects stop automatically on non-allowed sites
 
 ## What This Is Not
 

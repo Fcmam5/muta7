@@ -90,7 +90,7 @@ Community members who violate this code may face:
 
 ### Appeal Process
 
-If you believe a consequence is unjust, you may appeal by emailing conduct@muta7.dev with a detailed explanation of the situation.
+If you believe a consequence is unjust, you may appeal by emailing `au54vz9rk[at]mozmail[.]com` with a detailed explanation of the situation.
 
 ## Attribution
 

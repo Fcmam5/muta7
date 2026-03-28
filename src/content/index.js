@@ -80,11 +80,26 @@ function applyMotorState(blockerState, allowed) {
   module.update?.({ mode });
 }
 
+function applyHearingState(simulatorState, allowed) {
+  const module = globalThis.Muta7HearingSimulatorModule;
+  if (!module) return;
+
+  const mode = simulatorState?.mode ?? "none";
+  const level = Number(simulatorState?.level ?? 60);
+  if (!allowed || mode === "none") {
+    module.disable?.();
+    return;
+  }
+
+  module.update?.({ mode, level });
+}
+
 function applyState(extensionState) {
   const allowed = isCurrentUrlAllowed(extensionState);
   applyBlurState(extensionState?.visual?.blur, allowed);
   applyColorBlindnessState(extensionState?.visual?.colorBlindness, allowed);
   applyMotorState(extensionState?.motor?.blocker, allowed);
+  applyHearingState(extensionState?.hearing?.simulator, allowed);
 }
 
 chrome.runtime.sendMessage({ type: "GET_STATE" }, (response) => {
