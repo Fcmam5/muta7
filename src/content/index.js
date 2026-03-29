@@ -92,42 +92,6 @@ function applyMotorJitterState(jitterState, allowed) {
   module.update?.(jitterState);
 }
 
-function applyMotorAccidentalState(accidentalState, allowed) {
-  const module = globalThis.Muta7MotorAccidentalModule;
-  if (!module) return;
-
-  if (!allowed || !accidentalState?.enabled) {
-    module.disable?.();
-    return;
-  }
-
-  module.update?.(accidentalState);
-}
-
-function applyMotorMisclickState(misclickState, allowed) {
-  const module = globalThis.Muta7MotorMisclickModule;
-  if (!module) return;
-
-  if (!allowed || !misclickState?.enabled) {
-    module.disable?.();
-    return;
-  }
-
-  module.update?.(misclickState);
-}
-
-function applyMotorAsymmetryState(asymmetryState, allowed) {
-  const module = globalThis.Muta7MotorAsymmetryModule;
-  if (!module) return;
-
-  if (!allowed || !asymmetryState?.enabled) {
-    module.disable?.();
-    return;
-  }
-
-  module.update?.(asymmetryState);
-}
-
 function applyHearingState(simulatorState, allowed) {
   const module = globalThis.Muta7HearingSimulatorModule;
   if (!module) return;
@@ -149,9 +113,6 @@ function applyState(extensionState) {
   const motorState = extensionState?.motor ?? {};
   applyMotorBlockerState(motorState.blocker, allowed);
   applyMotorJitterState(motorState.jitter, allowed);
-  applyMotorAccidentalState(motorState.accidental, allowed);
-  applyMotorMisclickState(motorState.misclick, allowed);
-  applyMotorAsymmetryState(motorState.asymmetry, allowed);
   applyHearingState(extensionState?.hearing?.simulator, allowed);
 }
 

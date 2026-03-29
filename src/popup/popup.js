@@ -124,9 +124,6 @@ function applyPreset(presetName) {
     sendColorUpdate(),
     sendMotorUpdate(),
     sendMotorJitterUpdate(),
-    sendMotorAccidentalUpdate(),
-    sendMotorMisclickUpdate(),
-    sendMotorAsymmetryUpdate(),
     sendHearingUpdate(),
   ]);
 
@@ -157,38 +154,6 @@ const motorBlockKeyboardEl = document.getElementById("motor-block-keyboard");
 const motorJitterEnabledEl = document.getElementById("motor-jitter-enabled");
 const motorJitterLevelInputs = document.querySelectorAll(
   'input[name="motor-jitter-level"]',
-);
-const motorAccidentalEnabledEl = document.getElementById(
-  "motor-accidental-enabled",
-);
-const motorAccidentalModeInputs = document.querySelectorAll(
-  'input[name="motor-accidental-mode"]',
-);
-const motorMisclickEnabledEl = document.getElementById(
-  "motor-misclick-enabled",
-);
-const motorMisclickStrategyEl = document.getElementById(
-  "motor-misclick-strategy",
-);
-const motorMisclickRadiusEl = document.getElementById("motor-misclick-radius");
-const motorMisclickRadiusValueEl = document.getElementById(
-  "motor-misclick-radius-value",
-);
-const motorAsymmetryEnabledEl = document.getElementById(
-  "motor-asymmetry-enabled",
-);
-const motorAsymmetrySideInputs = document.querySelectorAll(
-  'input[name="motor-asymmetry-side"]',
-);
-const motorAsymmetrySlowdownEl = document.getElementById(
-  "motor-asymmetry-slowdown",
-);
-const motorAsymmetrySlowdownValueEl = document.getElementById(
-  "motor-asymmetry-slowdown-value",
-);
-const motorAsymmetryDriftEl = document.getElementById("motor-asymmetry-drift");
-const motorAsymmetryDriftValueEl = document.getElementById(
-  "motor-asymmetry-drift-value",
 );
 const hearingModeEl = document.getElementById("hearing-mode");
 const hearingLevelEl = document.getElementById("hearing-level");
@@ -236,7 +201,6 @@ const MOTOR_MODES = [
   "mouse-touch",
   "mouse-keyboard",
   "touch-keyboard",
-  "full",
 ];
 
 const MOTOR_JITTER_LEVELS = {
@@ -245,34 +209,11 @@ const MOTOR_JITTER_LEVELS = {
   high: { magnitudePx: 15, frequencyHz: 9 },
 };
 
-const MOTOR_ACCIDENTAL_MODES = ["down", "up", "both"];
-const MOTOR_MISCLICK_STRATEGIES = ["nearest", "random"];
-const MOTOR_ASYMMETRY_SIDES = ["left", "right", "random"];
-
 const DEFAULT_MOTOR_JITTER_STATE = {
   enabled: false,
   level: "low",
   magnitudePx: MOTOR_JITTER_LEVELS.low.magnitudePx,
   frequencyHz: MOTOR_JITTER_LEVELS.low.frequencyHz,
-};
-
-const DEFAULT_MOTOR_ACCIDENTAL_STATE = {
-  enabled: false,
-  mode: "down",
-  chance: 0.2,
-};
-
-const DEFAULT_MOTOR_MISCLICK_STATE = {
-  enabled: false,
-  strategy: "nearest",
-  radius: 35,
-};
-
-const DEFAULT_MOTOR_ASYMMETRY_STATE = {
-  enabled: false,
-  side: "left",
-  slowdown: 0.6,
-  drift: 80,
 };
 
 function normalizeColorMode(mode) {
@@ -292,24 +233,6 @@ function normalizeMotorJitterLevel(level) {
   if (!Object.keys(MOTOR_JITTER_LEVELS).includes(normalized)) {
     return "low";
   }
-  return normalized;
-}
-
-function normalizeAccidentalMode(mode) {
-  const normalized = String(mode ?? "down").toLowerCase();
-  if (!MOTOR_ACCIDENTAL_MODES.includes(normalized)) return "down";
-  return normalized;
-}
-
-function normalizeMisclickStrategy(strategy) {
-  const normalized = String(strategy ?? "nearest").toLowerCase();
-  if (!MOTOR_MISCLICK_STRATEGIES.includes(normalized)) return "nearest";
-  return normalized;
-}
-
-function normalizeAsymmetrySide(side) {
-  const normalized = String(side ?? "left").toLowerCase();
-  if (!MOTOR_ASYMMETRY_SIDES.includes(normalized)) return "left";
   return normalized;
 }
 
@@ -395,12 +318,7 @@ function setMotorUiFromMode(mode) {
   if (motorBlockKeyboardEl) motorBlockKeyboardEl.checked = flags.blockKeyboard;
 }
 
-function applyMotorFeatureUi({
-  jitter = DEFAULT_MOTOR_JITTER_STATE,
-  accidental = DEFAULT_MOTOR_ACCIDENTAL_STATE,
-  misclick = DEFAULT_MOTOR_MISCLICK_STATE,
-  asymmetry = DEFAULT_MOTOR_ASYMMETRY_STATE,
-} = {}) {
+function applyMotorFeatureUi({ jitter = DEFAULT_MOTOR_JITTER_STATE } = {}) {
   const jitterState = {
     ...DEFAULT_MOTOR_JITTER_STATE,
     ...jitter,
@@ -408,67 +326,9 @@ function applyMotorFeatureUi({
       jitter.level ?? DEFAULT_MOTOR_JITTER_STATE.level,
     ),
   };
-  const accidentalState = {
-    ...DEFAULT_MOTOR_ACCIDENTAL_STATE,
-    ...accidental,
-    mode: normalizeAccidentalMode(
-      accidental.mode ?? DEFAULT_MOTOR_ACCIDENTAL_STATE.mode,
-    ),
-  };
-  const misclickState = {
-    ...DEFAULT_MOTOR_MISCLICK_STATE,
-    ...misclick,
-    strategy: normalizeMisclickStrategy(
-      misclick.strategy ?? DEFAULT_MOTOR_MISCLICK_STATE.strategy,
-    ),
-    radius: clampNumber(
-      misclick.radius,
-      5,
-      200,
-      DEFAULT_MOTOR_MISCLICK_STATE.radius,
-    ),
-  };
-  const asymmetryState = {
-    ...DEFAULT_MOTOR_ASYMMETRY_STATE,
-    ...asymmetry,
-    side: normalizeAsymmetrySide(
-      asymmetry.side ?? DEFAULT_MOTOR_ASYMMETRY_STATE.side,
-    ),
-    slowdown: clampNumber(
-      asymmetry.slowdown,
-      0.2,
-      0.95,
-      DEFAULT_MOTOR_ASYMMETRY_STATE.slowdown,
-    ),
-    drift: clampNumber(
-      asymmetry.drift,
-      10,
-      400,
-      DEFAULT_MOTOR_ASYMMETRY_STATE.drift,
-    ),
-  };
 
   motorJitterEnabledEl.checked = Boolean(jitterState.enabled);
   setRadioGroupValue(motorJitterLevelInputs, jitterState.level);
-
-  motorAccidentalEnabledEl.checked = Boolean(accidentalState.enabled);
-  setRadioGroupValue(motorAccidentalModeInputs, accidentalState.mode);
-
-  motorMisclickEnabledEl.checked = Boolean(misclickState.enabled);
-  motorMisclickStrategyEl.value = misclickState.strategy;
-  motorMisclickRadiusEl.value = String(misclickState.radius);
-  motorMisclickRadiusValueEl.textContent = String(misclickState.radius);
-
-  motorAsymmetryEnabledEl.checked = Boolean(asymmetryState.enabled);
-  setRadioGroupValue(motorAsymmetrySideInputs, asymmetryState.side);
-  motorAsymmetrySlowdownEl.value = String(
-    Math.round(asymmetryState.slowdown * 100),
-  );
-  motorAsymmetrySlowdownValueEl.textContent = `${asymmetryState.slowdown.toFixed(2)}x`;
-  motorAsymmetryDriftEl.value = String(Math.round(asymmetryState.drift));
-  motorAsymmetryDriftValueEl.textContent = String(
-    Math.round(asymmetryState.drift),
-  );
 }
 
 function sendHearingUpdate() {
@@ -496,9 +356,6 @@ function updateReminderBanner() {
     colorValue: colorEnabledEl?.value,
     motorBlocker: currentMotorBlockerFromUi()?.mode,
     motorJitter: motorJitterEnabledEl?.checked,
-    motorAccidental: motorAccidentalEnabledEl?.checked,
-    motorMisclick: motorMisclickEnabledEl?.checked,
-    motorAsymmetry: motorAsymmetryEnabledEl?.checked,
     hearingValue: hearingModeEl?.value,
     hearingLevelValue: hearingLevelEl?.value,
   });
@@ -648,34 +505,6 @@ function readMotorJitterFromState(state) {
   };
 }
 
-function readMotorAccidentalFromState(state) {
-  const incoming = state?.motor?.accidental ?? {};
-  return {
-    enabled: Boolean(incoming.enabled),
-    mode: normalizeAccidentalMode(incoming.mode),
-    chance: clampNumber(incoming.chance, 0, 1, 0.2),
-  };
-}
-
-function readMotorMisclickFromState(state) {
-  const incoming = state?.motor?.misclick ?? {};
-  return {
-    enabled: Boolean(incoming.enabled),
-    strategy: normalizeMisclickStrategy(incoming.strategy),
-    radius: clampNumber(incoming.radius, 5, 200, 35),
-  };
-}
-
-function readMotorAsymmetryFromState(state) {
-  const incoming = state?.motor?.asymmetry ?? {};
-  return {
-    enabled: Boolean(incoming.enabled),
-    side: normalizeAsymmetrySide(incoming.side),
-    slowdown: clampNumber(incoming.slowdown, 0.2, 0.95, 0.6),
-    drift: clampNumber(incoming.drift, 10, 400, 80),
-  };
-}
-
 function parseAllowedUrlsInput(value) {
   const lines = value
     .split(/\n|,/)
@@ -695,9 +524,6 @@ function setUi(state) {
   const color = readColorFromState(state);
   const motorMode = normalizeMotorMode(state?.motor?.blocker?.mode);
   const motorJitter = readMotorJitterFromState(state);
-  const motorAccidental = readMotorAccidentalFromState(state);
-  const motorMisclick = readMotorMisclickFromState(state);
-  const motorAsymmetry = readMotorAsymmetryFromState(state);
   const hearingMode = state?.hearing?.simulator?.mode ?? "none";
   const hearingLevel = Number(state?.hearing?.simulator?.level ?? 60);
   const scope = readScopeFromState(state);
@@ -711,9 +537,6 @@ function setUi(state) {
   setMotorUiFromMode(motorMode);
   applyMotorFeatureUi({
     jitter: motorJitter,
-    accidental: motorAccidental,
-    misclick: motorMisclick,
-    asymmetry: motorAsymmetry,
   });
   hearingModeEl.value = hearingMode;
   hearingLevelEl.value = String(hearingLevel);
@@ -810,72 +633,10 @@ function currentMotorJitterFromUi() {
   };
 }
 
-function currentMotorAccidentalFromUi() {
-  const enabled = Boolean(motorAccidentalEnabledEl?.checked);
-  const mode = normalizeAccidentalMode(
-    getCheckedRadioValue(
-      motorAccidentalModeInputs,
-      DEFAULT_MOTOR_ACCIDENTAL_STATE.mode,
-    ),
-  );
-  return {
-    enabled,
-    mode,
-    chance: DEFAULT_MOTOR_ACCIDENTAL_STATE.chance,
-  };
-}
-
-function currentMotorMisclickFromUi() {
-  const enabled = Boolean(motorMisclickEnabledEl?.checked);
-  const strategy = normalizeMisclickStrategy(motorMisclickStrategyEl?.value);
-  const radius = clampNumber(
-    motorMisclickRadiusEl?.value,
-    5,
-    200,
-    DEFAULT_MOTOR_MISCLICK_STATE.radius,
-  );
-  return {
-    enabled,
-    strategy,
-    radius,
-  };
-}
-
-function currentMotorAsymmetryFromUi() {
-  const enabled = Boolean(motorAsymmetryEnabledEl?.checked);
-  const side = normalizeAsymmetrySide(
-    getCheckedRadioValue(
-      motorAsymmetrySideInputs,
-      DEFAULT_MOTOR_ASYMMETRY_STATE.side,
-    ),
-  );
-  const slowdown = clampNumber(
-    Number(motorAsymmetrySlowdownEl?.value) / 100,
-    0.2,
-    0.95,
-    DEFAULT_MOTOR_ASYMMETRY_STATE.slowdown,
-  );
-  const drift = clampNumber(
-    motorAsymmetryDriftEl?.value,
-    10,
-    400,
-    DEFAULT_MOTOR_ASYMMETRY_STATE.drift,
-  );
-  return {
-    enabled,
-    side,
-    slowdown,
-    drift,
-  };
-}
-
 function isMotorSimulationActive() {
   const blockerActive = currentMotorBlockerFromUi().mode !== "none";
   const jitter = Boolean(motorJitterEnabledEl?.checked);
-  const accidental = Boolean(motorAccidentalEnabledEl?.checked);
-  const misclick = Boolean(motorMisclickEnabledEl?.checked);
-  const asymmetry = Boolean(motorAsymmetryEnabledEl?.checked);
-  return blockerActive || jitter || accidental || misclick || asymmetry;
+  return blockerActive || jitter;
 }
 
 function currentHearingStateFromUi() {
@@ -959,54 +720,6 @@ function sendMotorJitterUpdate() {
         type: "SET_MOTOR_JITTER_STATE",
         tabId,
         jitter,
-      },
-      () => resolve(),
-    );
-  });
-}
-
-function sendMotorAccidentalUpdate() {
-  return new Promise(async (resolve) => {
-    const tabId = activeTabId ?? (await getActiveTabId());
-    const accidental = currentMotorAccidentalFromUi();
-
-    chrome.runtime.sendMessage(
-      {
-        type: "SET_MOTOR_ACCIDENTAL_STATE",
-        tabId,
-        accidental,
-      },
-      () => resolve(),
-    );
-  });
-}
-
-function sendMotorMisclickUpdate() {
-  return new Promise(async (resolve) => {
-    const tabId = activeTabId ?? (await getActiveTabId());
-    const misclick = currentMotorMisclickFromUi();
-
-    chrome.runtime.sendMessage(
-      {
-        type: "SET_MOTOR_MISCLICK_STATE",
-        tabId,
-        misclick,
-      },
-      () => resolve(),
-    );
-  });
-}
-
-function sendMotorAsymmetryUpdate() {
-  return new Promise(async (resolve) => {
-    const tabId = activeTabId ?? (await getActiveTabId());
-    const asymmetry = currentMotorAsymmetryFromUi();
-
-    chrome.runtime.sendMessage(
-      {
-        type: "SET_MOTOR_ASYMMETRY_STATE",
-        tabId,
-        asymmetry,
       },
       () => resolve(),
     );
@@ -1109,62 +822,6 @@ motorJitterLevelInputs.forEach((input) => {
     sendMotorJitterUpdate();
     markNeedsRefresh();
   });
-});
-
-motorAccidentalEnabledEl.addEventListener("change", () => {
-  updateReminderBanner();
-  sendMotorAccidentalUpdate();
-  markNeedsRefresh();
-});
-
-motorAccidentalModeInputs.forEach((input) => {
-  input.addEventListener("change", () => {
-    sendMotorAccidentalUpdate();
-    markNeedsRefresh();
-  });
-});
-
-motorMisclickEnabledEl.addEventListener("change", () => {
-  updateReminderBanner();
-  sendMotorMisclickUpdate();
-  markNeedsRefresh();
-});
-
-motorMisclickStrategyEl.addEventListener("change", () => {
-  sendMotorMisclickUpdate();
-  markNeedsRefresh();
-});
-
-motorMisclickRadiusEl.addEventListener("input", () => {
-  motorMisclickRadiusValueEl.textContent = String(motorMisclickRadiusEl.value);
-  sendMotorMisclickUpdate();
-  markNeedsRefresh();
-});
-
-motorAsymmetryEnabledEl.addEventListener("change", () => {
-  updateReminderBanner();
-  sendMotorAsymmetryUpdate();
-  markNeedsRefresh();
-});
-
-motorAsymmetrySideInputs.forEach((input) => {
-  input.addEventListener("change", () => {
-    sendMotorAsymmetryUpdate();
-    markNeedsRefresh();
-  });
-});
-
-motorAsymmetrySlowdownEl.addEventListener("input", () => {
-  const slowdown = Number(motorAsymmetrySlowdownEl.value) / 100;
-  motorAsymmetrySlowdownValueEl.textContent = `${slowdown.toFixed(2)}x`;
-  sendMotorAsymmetryUpdate();
-  markNeedsRefresh();
-});
-
-motorAsymmetryDriftEl.addEventListener("input", () => {
-  motorAsymmetryDriftValueEl.textContent = String(motorAsymmetryDriftEl.value);
-  sendMotorAsymmetryUpdate();
-  markNeedsRefresh();
 });
 
 hearingModeEl.addEventListener("change", () => {
@@ -1280,16 +937,6 @@ async function resetSimulations() {
   if (motorAccidentalEnabledEl) motorAccidentalEnabledEl.checked = false;
   setRadioGroupValue(motorAccidentalModeInputs, "down");
   if (motorMisclickEnabledEl) motorMisclickEnabledEl.checked = false;
-  if (motorMisclickStrategyEl) motorMisclickStrategyEl.value = "nearest";
-  if (motorMisclickRadiusEl) motorMisclickRadiusEl.value = "35";
-  if (motorMisclickRadiusValueEl) motorMisclickRadiusValueEl.textContent = "35";
-  if (motorAsymmetryEnabledEl) motorAsymmetryEnabledEl.checked = false;
-  setRadioGroupValue(motorAsymmetrySideInputs, "left");
-  if (motorAsymmetrySlowdownEl) motorAsymmetrySlowdownEl.value = "60";
-  if (motorAsymmetrySlowdownValueEl)
-    motorAsymmetrySlowdownValueEl.textContent = "0.60x";
-  if (motorAsymmetryDriftEl) motorAsymmetryDriftEl.value = "80";
-  if (motorAsymmetryDriftValueEl) motorAsymmetryDriftValueEl.textContent = "80";
   if (hearingModeEl) {
     hearingModeEl.value = "none";
     console.log("Hearing mode set to none");
@@ -1339,12 +986,6 @@ async function resetSimulations() {
 
     await sendMotorAccidentalUpdate();
     console.log("Motor accidental reset sent");
-
-    await sendMotorMisclickUpdate();
-    console.log("Motor misclick reset sent");
-
-    await sendMotorAsymmetryUpdate();
-    console.log("Motor asymmetry reset sent");
 
     await sendHearingUpdate();
     console.log("Hearing reset sent");

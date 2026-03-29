@@ -17,9 +17,6 @@ const MOTOR_MODES = [
   "full",
 ];
 const MOTOR_JITTER_LEVELS = ["low", "medium", "high"];
-const MOTOR_ACCIDENTAL_MODES = ["down", "up", "both"];
-const MOTOR_MISCLICK_STRATEGIES = ["nearest", "random"];
-const MOTOR_ASYMMETRY_SIDES = ["left", "right", "random"];
 const HEARING_MODES = ["none", "deaf", "hard"];
 
 const extensionState = {
@@ -42,22 +39,6 @@ const extensionState = {
       level: "low",
       magnitudePx: 2,
       frequencyHz: 3,
-    },
-    accidental: {
-      enabled: false,
-      mode: "down",
-      chance: 0.2,
-    },
-    misclick: {
-      enabled: false,
-      strategy: "nearest",
-      radius: 35,
-    },
-    asymmetry: {
-      enabled: false,
-      side: "left",
-      slowdown: 0.6,
-      drift: 80,
     },
   },
   hearing: {
@@ -126,53 +107,6 @@ function normalizeMotorJitterState(jitter) {
     level,
     magnitudePx,
     frequencyHz,
-  };
-}
-
-function normalizeMotorAccidentalState(accidental) {
-  const enabled = Boolean(accidental?.enabled);
-  const mode = MOTOR_ACCIDENTAL_MODES.includes(
-    String(accidental?.mode ?? "").toLowerCase(),
-  )
-    ? String(accidental.mode).toLowerCase()
-    : "down";
-  const chance = clampNumber(accidental?.chance, 0, 1, 0.2);
-  return {
-    enabled,
-    mode,
-    chance,
-  };
-}
-
-function normalizeMotorMisclickState(misclick) {
-  const enabled = Boolean(misclick?.enabled);
-  const strategy = MOTOR_MISCLICK_STRATEGIES.includes(
-    String(misclick?.strategy ?? "").toLowerCase(),
-  )
-    ? String(misclick.strategy).toLowerCase()
-    : "nearest";
-  const radius = clampNumber(misclick?.radius, 5, 200, 35);
-  return {
-    enabled,
-    strategy,
-    radius,
-  };
-}
-
-function normalizeMotorAsymmetryState(asymmetry) {
-  const enabled = Boolean(asymmetry?.enabled);
-  const side = MOTOR_ASYMMETRY_SIDES.includes(
-    String(asymmetry?.side ?? "").toLowerCase(),
-  )
-    ? String(asymmetry.side).toLowerCase()
-    : "left";
-  const slowdown = clampNumber(asymmetry?.slowdown, 0.2, 0.95, 0.6);
-  const drift = clampNumber(asymmetry?.drift, 10, 400, 80);
-  return {
-    enabled,
-    side,
-    slowdown,
-    drift,
   };
 }
 
@@ -264,9 +198,6 @@ function mergeWithDefaultState(state) {
     motor: {
       blocker: normalizeMotorBlockerState(incomingMotorBlocker),
       jitter: normalizeMotorJitterState(state?.motor?.jitter),
-      accidental: normalizeMotorAccidentalState(state?.motor?.accidental),
-      misclick: normalizeMotorMisclickState(state?.motor?.misclick),
-      asymmetry: normalizeMotorAsymmetryState(state?.motor?.asymmetry),
     },
     hearing: {
       simulator: normalizeHearingState(incomingHearing),
@@ -301,16 +232,7 @@ function isMotorSimulationEnabled(state) {
   const motor = state?.motor ?? {};
   const blockerActive = (motor.blocker?.mode ?? "none") !== "none";
   const jitterActive = Boolean(motor.jitter?.enabled);
-  const accidentalActive = Boolean(motor.accidental?.enabled);
-  const misclickActive = Boolean(motor.misclick?.enabled);
-  const asymmetryActive = Boolean(motor.asymmetry?.enabled);
-  return (
-    blockerActive ||
-    jitterActive ||
-    accidentalActive ||
-    misclickActive ||
-    asymmetryActive
-  );
+  return blockerActive || jitterActive;
 }
 
 function updateActionNotification(state) {
@@ -420,69 +342,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           motor: {
             ...storedState.motor,
             jitter: normalizeMotorJitterState(message.jitter),
-          },
-        };
-
-        return setStoredState(nextState).then(() => nextState);
-      })
-      .then((nextState) => {
-        updateActionNotification(nextState);
-        sendStateToTab(message.tabId, nextState);
-        sendResponse({ ok: true, extensionState: nextState });
-      });
-    return true;
-  }
-
-  if (message?.type === "SET_MOTOR_ACCIDENTAL_STATE") {
-    getStoredState()
-      .then((storedState) => {
-        const nextState = {
-          ...storedState,
-          motor: {
-            ...storedState.motor,
-            accidental: normalizeMotorAccidentalState(message.accidental),
-          },
-        };
-
-        return setStoredState(nextState).then(() => nextState);
-      })
-      .then((nextState) => {
-        updateActionNotification(nextState);
-        sendStateToTab(message.tabId, nextState);
-        sendResponse({ ok: true, extensionState: nextState });
-      });
-    return true;
-  }
-
-  if (message?.type === "SET_MOTOR_MISCLICK_STATE") {
-    getStoredState()
-      .then((storedState) => {
-        const nextState = {
-          ...storedState,
-          motor: {
-            ...storedState.motor,
-            misclick: normalizeMotorMisclickState(message.misclick),
-          },
-        };
-
-        return setStoredState(nextState).then(() => nextState);
-      })
-      .then((nextState) => {
-        updateActionNotification(nextState);
-        sendStateToTab(message.tabId, nextState);
-        sendResponse({ ok: true, extensionState: nextState });
-      });
-    return true;
-  }
-
-  if (message?.type === "SET_MOTOR_ASYMMETRY_STATE") {
-    getStoredState()
-      .then((storedState) => {
-        const nextState = {
-          ...storedState,
-          motor: {
-            ...storedState.motor,
-            asymmetry: normalizeMotorAsymmetryState(message.asymmetry),
           },
         };
 

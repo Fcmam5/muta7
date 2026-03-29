@@ -19,9 +19,6 @@
         "src/modules/visual/colorblindness.js",
         "src/modules/motor/blocker.js",
         "src/modules/motor/jitter.js",
-        "src/modules/motor/accidental.js",
-        "src/modules/motor/misclick.js",
-        "src/modules/motor/asymmetry.js",
         "src/modules/hearing/simulator.js",
         "src/content/index.js"
       ],
