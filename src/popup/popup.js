@@ -107,7 +107,7 @@ function applyPreset(presetName) {
   colorModeEl.value = preset.colorBlindness.mode;
   colorModeEl.disabled = !preset.colorBlindness.enabled;
 
-  motorModeEl.value = preset.motor.mode;
+  setMotorUiFromMode(preset.motor.mode);
 
   hearingModeEl.value = preset.hearing.mode;
   hearingLevelEl.value = preset.hearing.level;
@@ -146,7 +146,9 @@ const blurIntensityEl = document.getElementById("blur-intensity");
 const blurIntensityValueEl = document.getElementById("blur-intensity-value");
 const colorEnabledEl = document.getElementById("color-blindness-enabled");
 const colorModeEl = document.getElementById("color-blindness-mode");
-const motorModeEl = document.getElementById("motor-mode");
+const motorBlockMouseEl = document.getElementById("motor-block-mouse");
+const motorBlockTouchEl = document.getElementById("motor-block-touch");
+const motorBlockKeyboardEl = document.getElementById("motor-block-keyboard");
 const hearingModeEl = document.getElementById("hearing-mode");
 const hearingLevelEl = document.getElementById("hearing-level");
 const hearingLevelValueEl = document.getElementById("hearing-level-value");
@@ -161,7 +163,6 @@ const resetAllDisabilitiesEl = document.getElementById(
   "reset-all-disabilities",
 );
 const resetAllScopeEl = document.getElementById("reset-all-scope");
-const debugResetEl = document.getElementById("debug-reset");
 
 // Badge elements
 const disabilitiesCountEl = document.getElementById("disabilities-count");
@@ -186,10 +187,87 @@ const COLOR_MODES = [
   "monochromacy",
 ];
 
+const MOTOR_MODES = [
+  "none",
+  "mouse",
+  "touch",
+  "keyboard",
+  "mouse-touch",
+  "mouse-keyboard",
+  "touch-keyboard",
+  "full",
+];
+
 function normalizeColorMode(mode) {
   const normalized = String(mode ?? "none").toLowerCase();
   if (!COLOR_MODES.includes(normalized)) return "none";
   return normalized;
+}
+
+function normalizeMotorMode(mode) {
+  const normalized = String(mode ?? "none").toLowerCase();
+  if (!MOTOR_MODES.includes(normalized)) return "none";
+  return normalized;
+}
+
+function getMotorFlagsFromMode(mode) {
+  const normalizedMode = normalizeMotorMode(mode);
+
+  if (normalizedMode === "mouse") {
+    return { blockMouse: true, blockTouch: false, blockKeyboard: false };
+  }
+
+  if (normalizedMode === "touch") {
+    return { blockMouse: false, blockTouch: true, blockKeyboard: false };
+  }
+
+  if (normalizedMode === "keyboard") {
+    return { blockMouse: false, blockTouch: false, blockKeyboard: true };
+  }
+
+  if (normalizedMode === "mouse-touch") {
+    return { blockMouse: true, blockTouch: true, blockKeyboard: false };
+  }
+
+  if (normalizedMode === "mouse-keyboard") {
+    return { blockMouse: true, blockTouch: false, blockKeyboard: true };
+  }
+
+  if (normalizedMode === "touch-keyboard") {
+    return { blockMouse: false, blockTouch: true, blockKeyboard: true };
+  }
+
+  if (normalizedMode === "full") {
+    return { blockMouse: true, blockTouch: true, blockKeyboard: true };
+  }
+
+  return { blockMouse: false, blockTouch: false, blockKeyboard: false };
+}
+
+function getMotorModeFromFlags({
+  blockMouse = false,
+  blockTouch = false,
+  blockKeyboard = false,
+} = {}) {
+  const mouse = Boolean(blockMouse);
+  const touch = Boolean(blockTouch);
+  const keyboard = Boolean(blockKeyboard);
+
+  if (mouse && touch && keyboard) return "full";
+  if (mouse && touch) return "mouse-touch";
+  if (mouse && keyboard) return "mouse-keyboard";
+  if (touch && keyboard) return "touch-keyboard";
+  if (mouse) return "mouse";
+  if (touch) return "touch";
+  if (keyboard) return "keyboard";
+  return "none";
+}
+
+function setMotorUiFromMode(mode) {
+  const flags = getMotorFlagsFromMode(mode);
+  if (motorBlockMouseEl) motorBlockMouseEl.checked = flags.blockMouse;
+  if (motorBlockTouchEl) motorBlockTouchEl.checked = flags.blockTouch;
+  if (motorBlockKeyboardEl) motorBlockKeyboardEl.checked = flags.blockKeyboard;
 }
 
 function sendHearingUpdate() {
@@ -215,12 +293,12 @@ function updateReminderBanner() {
     blurValue: blurEnabledEl?.value,
     colorChecked: colorEnabledEl?.checked,
     colorValue: colorEnabledEl?.value,
-    motorValue: motorModeEl?.value,
+    motorValue: currentMotorBlockerFromUi()?.mode,
     hearingValue: hearingModeEl?.value,
     hearingLevelValue: hearingLevelEl?.value,
   });
 
-  const motorActive = motorModeEl?.value !== "none";
+  const motorActive = currentMotorBlockerFromUi().mode !== "none";
   const hearingActive = hearingModeEl?.value !== "none";
   const anyEnabled =
     blurEnabledEl?.checked ||
@@ -265,7 +343,7 @@ function updateDisabilitiesBadge() {
 
   if (blurEnabledEl?.checked) activeCount++;
   if (colorEnabledEl?.checked) activeCount++;
-  if (motorModeEl?.value !== "none") activeCount++;
+  if (currentMotorBlockerFromUi().mode !== "none") activeCount++;
   if (hearingModeEl?.value !== "none") activeCount++;
 
   if (activeCount > 0 && disabilitiesCountEl) {
@@ -291,7 +369,7 @@ function updateIndividualDisabilityBadges() {
   }
 
   // Motor disabilities
-  if (motorModeEl.value !== "none" && motorCountEl) {
+  if (currentMotorBlockerFromUi().mode !== "none" && motorCountEl) {
     motorCountEl.textContent = "1";
     motorCountEl.classList.remove("hidden");
   } else if (motorCountEl) {
@@ -370,7 +448,7 @@ function setScopeUi(scope) {
 function setUi(state) {
   const blur = readBlurFromState(state);
   const color = readColorFromState(state);
-  const motorMode = state?.motor?.blocker?.mode ?? "none";
+  const motorMode = normalizeMotorMode(state?.motor?.blocker?.mode);
   const hearingMode = state?.hearing?.simulator?.mode ?? "none";
   const hearingLevel = Number(state?.hearing?.simulator?.level ?? 60);
   const scope = readScopeFromState(state);
@@ -381,7 +459,7 @@ function setUi(state) {
   colorEnabledEl.checked = Boolean(color.enabled);
   colorModeEl.value = normalizeColorMode(color.mode);
   colorModeEl.disabled = !colorEnabledEl.checked;
-  motorModeEl.value = motorMode;
+  setMotorUiFromMode(motorMode);
   hearingModeEl.value = hearingMode;
   hearingLevelEl.value = String(hearingLevel);
   hearingLevelValueEl.value = String(hearingLevel);
@@ -451,8 +529,12 @@ function currentColorBlindnessFromUi() {
 }
 
 function currentMotorBlockerFromUi() {
+  const blockMouse = Boolean(motorBlockMouseEl?.checked);
+  const blockTouch = Boolean(motorBlockTouchEl?.checked);
+  const blockKeyboard = Boolean(motorBlockKeyboardEl?.checked);
+
   return {
-    mode: motorModeEl.value,
+    mode: getMotorModeFromFlags({ blockMouse, blockTouch, blockKeyboard }),
   };
 }
 
@@ -594,7 +676,19 @@ colorModeEl.addEventListener("change", () => {
   markNeedsRefresh();
 });
 
-motorModeEl.addEventListener("change", () => {
+motorBlockMouseEl.addEventListener("change", () => {
+  updateReminderBanner();
+  sendMotorUpdate();
+  markNeedsRefresh();
+});
+
+motorBlockTouchEl.addEventListener("change", () => {
+  updateReminderBanner();
+  sendMotorUpdate();
+  markNeedsRefresh();
+});
+
+motorBlockKeyboardEl.addEventListener("change", () => {
   updateReminderBanner();
   sendMotorUpdate();
   markNeedsRefresh();
@@ -681,41 +775,6 @@ if (resetAllScopeEl) {
   });
 }
 
-// Debug reset button
-if (debugResetEl) {
-  debugResetEl.addEventListener("click", () => {
-    console.log("DEBUG RESET CLICKED - forcing immediate reset");
-    // Force immediate reset without any background communication
-    if (blurEnabledEl) blurEnabledEl.checked = false;
-    if (blurIntensityEl) blurIntensityEl.value = "0";
-    if (blurIntensityValueEl) blurIntensityValueEl.value = "0";
-    if (colorEnabledEl) colorEnabledEl.checked = false;
-    if (colorModeEl) {
-      colorModeEl.value = "none";
-      colorModeEl.disabled = true;
-    }
-    if (motorModeEl) motorModeEl.value = "none";
-    if (hearingModeEl) hearingModeEl.value = "none";
-    if (hearingLevelEl) hearingLevelEl.value = "60";
-    if (hearingLevelValueEl) hearingLevelValueEl.value = "60";
-    if (hearingLevelEl) hearingLevelEl.disabled = true;
-
-    // Clear presets
-    if (presetCards) {
-      presetCards.forEach((card) => {
-        card.classList.remove("active");
-      });
-    }
-
-    // Update UI
-    updateReminderBanner();
-    updateScopeBadge();
-    showRefreshNotice(false);
-
-    console.log("DEBUG RESET COMPLETE - UI should be reset now");
-  });
-}
-
 async function resetSimulations() {
   console.log("Reset simulations called");
 
@@ -735,16 +794,14 @@ async function resetSimulations() {
   if (colorEnabledEl) {
     colorEnabledEl.checked = false;
     console.log("Color disabled");
-  }
-  if (colorModeEl) {
     colorModeEl.value = "none";
     colorModeEl.disabled = true;
     console.log("Color mode set to none");
   }
-  if (motorModeEl) {
-    motorModeEl.value = "none";
-    console.log("Motor mode set to none");
-  }
+  if (motorBlockMouseEl) motorBlockMouseEl.checked = false;
+  if (motorBlockTouchEl) motorBlockTouchEl.checked = false;
+  if (motorBlockKeyboardEl) motorBlockKeyboardEl.checked = false;
+  console.log("Motor inputs enabled");
   if (hearingModeEl) {
     hearingModeEl.value = "none";
     console.log("Hearing mode set to none");

@@ -179,14 +179,6 @@
             <button id="reset-all" type="button" class="button-secondary">
               Reset All Settings
             </button>
-            <button
-              id="debug-reset"
-              type="button"
-              class="button-primary"
-              style="background: #ff6b6b"
-            >
-              DEBUG: Force Reset
-            </button>
           </div>
         </div>
 
@@ -357,15 +349,24 @@
                   Motor Disability Simulation
                 </h3>
                 <p class="control-description">
-                  Block mouse and/or keyboard input to mimic voice-only
+                  Block mouse, touch, and/or keyboard input to mimic voice-only
                   navigation setups.
                 </p>
-                <label for="motor-mode">Interaction mode</label>
-                <select id="motor-mode">
-                  <option value="none">Allow mouse & keyboard</option>
-                  <option value="mouse">Disable mouse (pointer)</option>
-                  <option value="full">Disable mouse & keyboard</option>
-                </select>
+                <fieldset>
+                  <legend>Disable input methods</legend>
+                  <label class="toggle-row" for="motor-block-mouse">
+                    <span>Disable all mouse input</span>
+                    <input id="motor-block-mouse" type="checkbox" />
+                  </label>
+                  <label class="toggle-row" for="motor-block-touch">
+                    <span>Disable all touch input</span>
+                    <input id="motor-block-touch" type="checkbox" />
+                  </label>
+                  <label class="toggle-row" for="motor-block-keyboard">
+                    <span>Disable keyboard input</span>
+                    <input id="motor-block-keyboard" type="checkbox" />
+                  </label>
+                </fieldset>
               </section>
             </div>
 

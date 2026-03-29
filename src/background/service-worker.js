@@ -6,7 +6,16 @@ const COLOR_MODES = [
   "monochromacy",
 ];
 
-const MOTOR_MODES = ["none", "mouse", "full"];
+const MOTOR_MODES = [
+  "none",
+  "mouse",
+  "touch",
+  "keyboard",
+  "mouse-touch",
+  "mouse-keyboard",
+  "touch-keyboard",
+  "full",
+];
 const HEARING_MODES = ["none", "deaf", "hard"];
 
 const extensionState = {

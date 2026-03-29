@@ -1,11 +1,24 @@
 (() => {
   const MODES = {
-    none: { blockPointer: false, blockKeyboard: false },
-    mouse: { blockPointer: true, blockKeyboard: false },
-    full: { blockPointer: true, blockKeyboard: true },
+    none: { blockMouse: false, blockTouch: false, blockKeyboard: false },
+    mouse: { blockMouse: true, blockTouch: false, blockKeyboard: false },
+    touch: { blockMouse: false, blockTouch: true, blockKeyboard: false },
+    keyboard: { blockMouse: false, blockTouch: false, blockKeyboard: true },
+    "mouse-touch": { blockMouse: true, blockTouch: true, blockKeyboard: false },
+    "mouse-keyboard": {
+      blockMouse: true,
+      blockTouch: false,
+      blockKeyboard: true,
+    },
+    "touch-keyboard": {
+      blockMouse: false,
+      blockTouch: true,
+      blockKeyboard: true,
+    },
+    full: { blockMouse: true, blockTouch: true, blockKeyboard: true },
   };
 
-  const POINTER_EVENTS = [
+  const MOUSE_EVENTS = [
     "click",
     "auxclick",
     "dblclick",
@@ -17,7 +30,20 @@
     "mouseleave",
     "mouseover",
     "mouseout",
+    "mousewheel",
     "wheel",
+    "drag",
+    "dragstart",
+    "dragend",
+    "dragenter",
+    "dragleave",
+    "dragover",
+    "drop",
+  ];
+
+  const SCROLL_EVENTS = ["wheel", "mousewheel"];
+
+  const POINTER_EVENTS = [
     "pointerdown",
     "pointerup",
     "pointermove",
@@ -25,62 +51,164 @@
     "pointerenter",
     "pointerleave",
     "pointerout",
+    "pointercancel",
+    "gotpointercapture",
+    "lostpointercapture",
+  ];
+
+  const TOUCH_EVENTS = [
+    "touchstart",
+    "touchmove",
+    "touchend",
+    "touchcancel",
+    "gesturestart",
+    "gesturechange",
+    "gestureend",
   ];
 
   const KEY_EVENTS = ["keydown", "keypress", "keyup"];
 
+  let mouseHandler = null;
   let pointerHandler = null;
+  let touchHandler = null;
+  let scrollHandler = null;
   let keyboardHandler = null;
   let currentMode = "none";
-  let cursorStyleEl = null;
+  let interactionStyleEl = null;
+  let pointerPolicy = { blockMouse: false, blockTouch: false };
+  let mousePolicy = { blockMouse: false, blockKeyboard: false };
 
   function suppress(event) {
-    event.preventDefault();
+    if (event.cancelable) {
+      event.preventDefault();
+    }
     event.stopImmediatePropagation();
   }
 
-  function enableCursorOverride() {
-    if (cursorStyleEl || !document.documentElement) return;
+  function setInteractionOverride({ blockMouse = false, blockTouch = false }) {
+    if (!document.documentElement) return;
+
+    if (interactionStyleEl) {
+      interactionStyleEl.remove();
+      interactionStyleEl = null;
+    }
+
+    if (!blockMouse && !blockTouch) {
+      return;
+    }
+
     const style = document.createElement("style");
     style.setAttribute("data-muta7-motor-cursor", "true");
-    style.textContent = `
-      * {
-        cursor: help !important;
-        pointer-events: none !important;
-      }
-      
-      /* Explicitly block scrolling */
-      html, body {
-        overflow: hidden !important;
-        touch-action: none !important;
-        -ms-touch-action: none !important;
-      }
-      
-      /* Block all mouse interactions */
-      * {
-        user-select: none !important;
-        -webkit-user-select: none !important;
-        -moz-user-select: none !important;
-        -ms-user-select: none !important;
-      }
-    `;
+    const styleRules = [];
+
+    if (blockMouse) {
+      styleRules.push(`
+        * {
+          cursor: not-allowed !important;
+          user-select: none !important;
+          -webkit-user-select: none !important;
+          -moz-user-select: none !important;
+          -ms-user-select: none !important;
+        }
+      `);
+    }
+
+    if (blockTouch) {
+      styleRules.push(`
+        html, body, * {
+          touch-action: none !important;
+          -ms-touch-action: none !important;
+        }
+      `);
+    }
+
+    style.textContent = styleRules.join("\n");
     document.documentElement.appendChild(style);
-    cursorStyleEl = style;
+    interactionStyleEl = style;
   }
 
-  function disableCursorOverride() {
-    if (!cursorStyleEl) return;
-    cursorStyleEl.remove();
-    cursorStyleEl = null;
+  function shouldBlockMouseEvent(event) {
+    if (!mousePolicy.blockMouse) {
+      return false;
+    }
+
+    const canBeKeyboardActivation =
+      !mousePolicy.blockKeyboard &&
+      (event.type === "click" || event.type === "contextmenu") &&
+      event.detail === 0;
+
+    if (canBeKeyboardActivation) {
+      return false;
+    }
+
+    return true;
   }
 
-  function setPointerCapture(active) {
+  function setMouseCapture(
+    active,
+    policy = { blockMouse: false, blockKeyboard: false },
+  ) {
+    mousePolicy = {
+      blockMouse: Boolean(policy.blockMouse),
+      blockKeyboard: Boolean(policy.blockKeyboard),
+    };
+
+    if (active && !mouseHandler) {
+      mouseHandler = (event) => {
+        if (!shouldBlockMouseEvent(event)) return;
+        suppress(event);
+      };
+      MOUSE_EVENTS.forEach((eventName) => {
+        document.addEventListener(eventName, mouseHandler, true);
+      });
+      return;
+    }
+
+    if (!active && mouseHandler) {
+      MOUSE_EVENTS.forEach((eventName) => {
+        document.removeEventListener(eventName, mouseHandler, true);
+      });
+      mouseHandler = null;
+    }
+  }
+
+  function shouldBlockPointer(event) {
+    const pointerType = String(event?.pointerType ?? "").toLowerCase();
+    const isMousePointer = pointerType === "" || pointerType === "mouse";
+    const isTouchPointer = pointerType === "touch";
+
+    if (pointerPolicy.blockMouse && pointerPolicy.blockTouch) {
+      return true;
+    }
+
+    if (pointerPolicy.blockMouse && isMousePointer) {
+      return true;
+    }
+
+    if (pointerPolicy.blockTouch && isTouchPointer) {
+      return true;
+    }
+
+    return false;
+  }
+
+  function setPointerCapture(
+    active,
+    policy = { blockMouse: false, blockTouch: false },
+  ) {
+    pointerPolicy = {
+      blockMouse: Boolean(policy.blockMouse),
+      blockTouch: Boolean(policy.blockTouch),
+    };
+
     if (active && !pointerHandler) {
-      pointerHandler = suppress;
+      pointerHandler = (event) => {
+        if (!shouldBlockPointer(event)) return;
+        suppress(event);
+      };
       POINTER_EVENTS.forEach((eventName) => {
         document.addEventListener(eventName, pointerHandler, true);
       });
-      enableCursorOverride();
       return;
     }
 
@@ -89,7 +217,48 @@
         document.removeEventListener(eventName, pointerHandler, true);
       });
       pointerHandler = null;
-      disableCursorOverride();
+    }
+  }
+
+  function setTouchCapture(active) {
+    if (active && !touchHandler) {
+      touchHandler = suppress;
+      TOUCH_EVENTS.forEach((eventName) => {
+        document.addEventListener(eventName, touchHandler, true);
+      });
+      return;
+    }
+
+    if (!active && touchHandler) {
+      TOUCH_EVENTS.forEach((eventName) => {
+        document.removeEventListener(eventName, touchHandler, true);
+      });
+      touchHandler = null;
+    }
+  }
+
+  function setScrollCapture(active) {
+    if (active && !scrollHandler) {
+      scrollHandler = suppress;
+      SCROLL_EVENTS.forEach((eventName) => {
+        document.addEventListener(eventName, scrollHandler, {
+          capture: true,
+          passive: false,
+        });
+        window.addEventListener(eventName, scrollHandler, {
+          capture: true,
+          passive: false,
+        });
+      });
+      return;
+    }
+
+    if (!active && scrollHandler) {
+      SCROLL_EVENTS.forEach((eventName) => {
+        document.removeEventListener(eventName, scrollHandler, true);
+        window.removeEventListener(eventName, scrollHandler, true);
+      });
+      scrollHandler = null;
     }
   }
 
@@ -112,9 +281,13 @@
 
   function applyMode(mode = "none") {
     const config = MODES[mode] ?? MODES.none;
-    setPointerCapture(config.blockPointer);
+    setMouseCapture(config.blockMouse, config);
+    setPointerCapture(config.blockMouse || config.blockTouch, config);
+    setTouchCapture(config.blockTouch);
+    setScrollCapture(config.blockMouse || config.blockTouch);
     setKeyboardCapture(config.blockKeyboard);
     currentMode = mode;
+    setInteractionOverride(config);
   }
 
   function enable({ mode = "none" } = {}) {
