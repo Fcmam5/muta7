@@ -43,20 +43,29 @@ Thank you for your interest in contributing to Muta7! This document provides gui
 - Chromium-based browser
 - Git
 - Basic JavaScript/HTML/CSS knowledge
+- Node.js (for skilleton commands)
 
 ### Local Development
 
 1. Clone your fork
 ```bash
-git clone https://github.com/fcmam5/muta7.git
+git clone https://github.com/your-username/muta7.git
 cd muta7
 ```
 
-2. Load in browser
-- Open `chrome://extensions`
-- Enable "Developer mode"
-- Click "Load unpacked"
-- Select the `muta7` directory
+2. Install Skills
+```bash
+npx skilleton install
+```
+
+3. Load Extension in Browser
+```bash
+# Open Chrome/Edge and navigate to:
+chrome://extensions/
+# Enable "Developer mode"
+# Click "Load unpacked"
+# Select the `muta7` directory
+```
 
 3. Make changes and reload:
 - In `chrome://extensions`, click the reload icon for Muta7

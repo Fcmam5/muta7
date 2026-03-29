@@ -118,6 +118,10 @@ Muta7 complements these tools by letting you *feel* accessibility issues, not ju
 
 ```
 muta7/
+├── .agents/                 # Symlinked skills directory
+│   └── skills/             # Installed skills from skilleton
+├── .skilleton/             # Skills source directory
+│   └── skills/             # Skill definitions
 ├── src/
 │   ├── background/          # Service worker
 │   │   └── service-worker.js
@@ -134,8 +138,18 @@ muta7/
 │       ├── popup.html
 │       ├── popup.css
 │       └── popup.js
-├── manifest.json           # Manifest V3
-└── README.md
+├── skilleton.json          # Skills configuration
+├── skilleton.lock.json     # Skills lock file
+└── manifest.json           # Extension manifest
+```
+
+### Skills System
+
+This project uses [skilleton](https://www.npmjs.com/package/skilleton) for managing AI skills.
+
+**Install skills:**
+```bash
+npx skilleton install
 ```
 
 ### Adding a New Simulation Module

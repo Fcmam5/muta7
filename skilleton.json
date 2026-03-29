@@ -1,0 +1,11 @@
+{
+  "$schema": "./skilleton.schema.json",
+  "skills": [
+    {
+      "name": "accessibility",
+      "repo": "https://github.com/addyosmani/web-quality-skills",
+      "path": "skills/accessibility",
+      "ref": "fed9617111260e19f4f54b72a2874a3f3de8ff94"
+    }
+  ]
+}

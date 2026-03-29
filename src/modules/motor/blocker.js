@@ -48,6 +48,21 @@
         cursor: help !important;
         pointer-events: none !important;
       }
+      
+      /* Explicitly block scrolling */
+      html, body {
+        overflow: hidden !important;
+        touch-action: none !important;
+        -ms-touch-action: none !important;
+      }
+      
+      /* Block all mouse interactions */
+      * {
+        user-select: none !important;
+        -webkit-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+      }
     `;
     document.documentElement.appendChild(style);
     cursorStyleEl = style;

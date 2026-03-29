@@ -3,12 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Muta7</title>
+    <title>Muta7 - Accessibility Simulator</title>
     <link rel="stylesheet" href="./popup.css" />
   </head>
   <body>
-    <main aria-labelledby="popup-title">
-      <h1 id="popup-title">Muta7</h1>
+    <!-- Skip link for keyboard navigation -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <main id="main-content" aria-labelledby="popup-title">
+      <h1 id="popup-title">Muta7 Accessibility Simulator</h1>
+
       <p
         id="settings-reminder"
         class="reminder-banner"
@@ -19,20 +23,27 @@
         <span class="reminder-text"
           >Reminder: one or more simulations are currently enabled.</span
         >
-        <button id="reset-reminder" type="button" class="reset-link">
+        <button
+          id="reset-reminder"
+          type="button"
+          class="reset-link"
+          aria-label="Reset all accessibility simulations"
+        >
           Reset&nbsp;all
         </button>
       </p>
 
       <!-- Main Navigation -->
-      <div class="main-navigation" role="tablist">
+      <nav class="main-navigation" role="tablist" aria-label="Main navigation">
         <button
           class="nav-button active"
           role="tab"
           data-page="presets"
           aria-selected="true"
+          aria-controls="presets-page"
+          id="presets-tab"
         >
-          <span class="nav-icon">👤</span>
+          <span class="nav-icon" aria-hidden="true">👤</span>
           <span class="nav-label">Presets</span>
         </button>
         <button
@@ -40,10 +51,15 @@
           role="tab"
           data-page="disabilities"
           aria-selected="false"
+          aria-controls="disabilities-page"
+          id="disabilities-tab"
         >
-          <span class="nav-icon">♿</span>
+          <span class="nav-icon" aria-hidden="true">♿</span>
           <span class="nav-label">Disabilities</span>
-          <span class="nav-badge active-count hidden" id="disabilities-count"
+          <span
+            class="nav-badge active-count hidden"
+            id="disabilities-count"
+            aria-label="Number of active disability simulations"
             >0</span
           >
         </button>
@@ -52,20 +68,28 @@
           role="tab"
           data-page="scope"
           aria-selected="false"
+          aria-controls="scope-page"
+          id="scope-tab"
         >
-          <span class="nav-icon">🌐</span>
+          <span class="nav-icon" aria-hidden="true">🌐</span>
           <span class="nav-label">Scope</span>
           <span
             class="nav-badge url-indicator hidden"
             id="scope-indicator"
+            aria-label="URLs configured for scope"
           ></span>
         </button>
-      </div>
+      </nav>
 
       <!-- Page Content -->
       <div class="page-content">
         <!-- Presets Page -->
-        <div class="page-panel active" id="presets-page" role="tabpanel">
+        <div
+          class="page-panel active"
+          id="presets-page"
+          role="tabpanel"
+          aria-labelledby="presets-tab"
+        >
           <div class="page-header">
             <h2>Persona Presets</h2>
             <p class="page-description">
@@ -73,49 +97,79 @@
             </p>
           </div>
 
-          <div class="presets-grid">
-            <button class="preset-card" data-preset="elderly">
-              <div class="preset-icon">👵</div>
+          <div
+            class="presets-grid"
+            role="group"
+            aria-label="Accessibility persona presets"
+          >
+            <button
+              class="preset-card"
+              data-preset="elderly"
+              aria-describedby="preset-elderly-desc"
+            >
+              <div class="preset-icon" aria-hidden="true">👵</div>
               <div class="preset-title">Elderly User</div>
-              <div class="preset-description">
+              <div id="preset-elderly-desc" class="preset-description">
                 Age-related vision and motor changes
               </div>
             </button>
 
-            <button class="preset-card" data-preset="colorblind">
-              <div class="preset-icon">🎨</div>
+            <button
+              class="preset-card"
+              data-preset="colorblind"
+              aria-describedby="preset-colorblind-desc"
+            >
+              <div class="preset-icon" aria-hidden="true">🎨</div>
               <div class="preset-title">Colorblind User</div>
-              <div class="preset-description">
+              <div id="preset-colorblind-desc" class="preset-description">
                 Various color vision deficiencies
               </div>
             </button>
 
-            <button class="preset-card" data-preset="motor-impaired">
-              <div class="preset-icon">♿</div>
+            <button
+              class="preset-card"
+              data-preset="motor-impaired"
+              aria-describedby="preset-motor-desc"
+            >
+              <div class="preset-icon" aria-hidden="true">♿</div>
               <div class="preset-title">Motor Impaired</div>
-              <div class="preset-description">
+              <div id="preset-motor-desc" class="preset-description">
                 Limited motor control, voice navigation
               </div>
             </button>
 
-            <button class="preset-card" data-preset="low-vision">
-              <div class="preset-icon">🔍</div>
+            <button
+              class="preset-card"
+              data-preset="low-vision"
+              aria-describedby="preset-lowvision-desc"
+            >
+              <div class="preset-icon" aria-hidden="true">🔍</div>
               <div class="preset-title">Low Vision</div>
-              <div class="preset-description">
+              <div id="preset-lowvision-desc" class="preset-description">
                 Significant visual impairment
               </div>
             </button>
 
-            <button class="preset-card" data-preset="deaf">
-              <div class="preset-icon">🔇</div>
+            <button
+              class="preset-card"
+              data-preset="deaf"
+              aria-describedby="preset-deaf-desc"
+            >
+              <div class="preset-icon" aria-hidden="true">🔇</div>
               <div class="preset-title">Deaf User</div>
-              <div class="preset-description">Complete hearing loss</div>
+              <div id="preset-deaf-desc" class="preset-description">
+                Complete hearing loss
+              </div>
             </button>
 
-            <button class="preset-card" data-preset="adhd">
-              <div class="preset-icon">💭</div>
+            <button
+              class="preset-card"
+              data-preset="adhd"
+              aria-describedby="preset-adhd-desc"
+            >
+              <div class="preset-icon" aria-hidden="true">💭</div>
               <div class="preset-title">ADHD User</div>
-              <div class="preset-description">
+              <div id="preset-adhd-desc" class="preset-description">
                 Attention and focus challenges
               </div>
             </button>
@@ -137,7 +191,13 @@
         </div>
 
         <!-- Disabilities Page -->
-        <div class="page-panel" id="disabilities-page" role="tabpanel" hidden>
+        <div
+          class="page-panel"
+          id="disabilities-page"
+          role="tabpanel"
+          aria-labelledby="disabilities-tab"
+          hidden
+        >
           <div class="page-header">
             <h2>Disability Simulations</h2>
             <p class="page-description">
@@ -146,51 +206,79 @@
           </div>
 
           <!-- Disability Tab Navigation -->
-          <div class="tab-navigation" role="tablist">
+          <nav
+            class="tab-navigation"
+            role="tablist"
+            aria-label="Disability categories"
+          >
             <button
               class="tab-button active"
               role="tab"
               data-tab="visual"
               aria-selected="true"
+              aria-controls="visual-panel"
+              id="visual-tab"
             >
-              <span class="tab-icon">👁️</span>
+              <span class="tab-icon" aria-hidden="true">👁️</span>
               <span class="tab-label">Visual</span>
-              <span class="tab-badge hidden" id="visual-count">0</span>
+              <span
+                class="tab-badge hidden"
+                id="visual-count"
+                aria-label="Number of active visual simulations"
+                >0</span
+              >
             </button>
             <button
               class="tab-button"
               role="tab"
               data-tab="motor"
               aria-selected="false"
+              aria-controls="motor-panel"
+              id="motor-tab"
             >
-              <span class="tab-icon">🖐️</span>
+              <span class="tab-icon" aria-hidden="true">🖐️</span>
               <span class="tab-label">Motor</span>
-              <span class="tab-badge hidden" id="motor-count">0</span>
+              <span
+                class="tab-badge hidden"
+                id="motor-count"
+                aria-label="Number of active motor simulations"
+                >0</span
+              >
             </button>
             <button
               class="tab-button"
               role="tab"
               data-tab="hearing"
               aria-selected="false"
+              aria-controls="hearing-panel"
+              id="hearing-tab"
             >
-              <span class="tab-icon">👂</span>
+              <span class="tab-icon" aria-hidden="true">👂</span>
               <span class="tab-label">Hearing</span>
-              <span class="tab-badge hidden" id="hearing-count">0</span>
+              <span
+                class="tab-badge hidden"
+                id="hearing-count"
+                aria-label="Number of active hearing simulations"
+                >0</span
+              >
             </button>
             <button
               class="tab-button"
               role="tab"
               data-tab="cognitive"
               aria-selected="false"
+              aria-controls="cognitive-panel"
+              id="cognitive-tab"
             >
-              <span class="tab-icon">🧠</span>
+              <span class="tab-icon" aria-hidden="true">🧠</span>
               <span class="tab-label">Cognitive</span>
               <span
                 class="tab-badge indicator hidden"
                 id="cognitive-indicator"
+                aria-label="Cognitive features available"
               ></span>
             </button>
-          </div>
+          </nav>
 
           <!-- Disability Tab Content -->
           <div class="tab-content">

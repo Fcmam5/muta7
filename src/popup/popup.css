@@ -2,6 +2,27 @@
   box-sizing: border-box;
 }
 
+/* Skip link for keyboard navigation */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #10131a;
+  color: #e9edf6;
+  padding: 8px;
+  text-decoration: none;
+  border-radius: 4px;
+  border: 2px solid #574103;
+  z-index: 1000;
+  transition: top 0.3s;
+}
+
+.skip-link:focus {
+  top: 6px;
+  outline: 2px solid #005fcc;
+  outline-offset: 2px;
+}
+
 body {
   margin: 0;
   min-width: 320px;
@@ -20,6 +41,32 @@ h1 {
   margin: 0 0 12px;
   font-size: 18px;
   font-weight: 600;
+}
+
+h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Enhanced focus indicators */
+:focus-visible {
+  outline: 2px solid #005fcc;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Remove default focus but keep visible focus */
+:focus {
+  outline: none;
+}
+
+/* High contrast focus for better visibility */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  box-shadow: 0 0 0 3px rgba(0, 95, 204, 0.3);
 }
 
 .reminder-banner {
@@ -446,43 +493,112 @@ input[type="checkbox"] {
 
 .button-primary,
 .button-secondary {
-  width: 100%;
-  margin-top: 8px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 16px;
   border-radius: 6px;
-  border: 1px solid transparent;
-  padding: 8px 12px;
-  color: #f5f8ff;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  border: 2px solid transparent;
+  position: relative;
 }
 
 .button-primary {
-  background: #2168ff;
+  background: #005fcc;
+  color: #ffffff;
+  border-color: #005fcc;
 }
 
-.button-primary:hover {
-  background: #2d7aff;
-  transform: translateY(-1px);
+.button-primary:hover,
+.button-primary:focus-visible {
+  background: #004db3;
+  border-color: #004db3;
 }
 
 .button-secondary {
-  background: #2a3142;
-  border-color: #394158;
+  background: transparent;
+  color: #e9edf6;
+  border-color: #574103;
 }
 
-.button-secondary:hover {
-  background: #343c52;
-  border-color: #475068;
+.button-secondary:hover,
+.button-secondary:focus-visible {
+  background: #574103;
+  color: #f8dda1;
 }
 
-.refresh-notice {
-  margin-top: 16px;
-  border: 1px solid #234387;
-  background: #15284f;
-  border-radius: 8px;
+/* Navigation buttons with proper target size */
+.nav-button,
+.tab-button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: #e9edf6;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  font-size: 14px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.nav-button:hover,
+.nav-button:focus-visible,
+.tab-button:hover,
+.tab-button:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-button.active,
+.tab-button.active {
+  background: #005fcc;
+  color: #ffffff;
+}
+
+/* Preset cards accessibility */
+.preset-card {
+  min-height: 44px;
   padding: 12px;
+  border: 2px solid #574103;
+  border-radius: 8px;
+  background: transparent;
+  color: #e9edf6;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  font: inherit;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.preset-card:hover,
+.preset-card:focus-visible {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: #005fcc;
+}
+
+.preset-card.active {
+  background: #005fcc;
+  border-color: #005fcc;
+  color: #ffffff;
 }
 
 .refresh-notice p {
@@ -491,8 +607,128 @@ input[type="checkbox"] {
   line-height: 1.35;
 }
 
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .button-primary {
+    background: #000000;
+    border-color: #ffffff;
+    color: #ffffff;
+  }
+  
+  .button-secondary {
+    background: #000000;
+    border-color: #ffffff;
+    color: #ffffff;
+  }
+  
+  .preset-card {
+    border-color: #ffffff;
+  }
+  
+  .preset-card.active {
+    background: #000000;
+    border-color: #ffffff;
+    color: #ffffff;
+  }
+}
+
+/* Form control accessibility */
 input[type="range"] {
   width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #574103;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #005fcc;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+}
+
+input[type="range"]::-moz-range-thumb {
+  -moz-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #005fcc;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+}
+
+input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px rgba(0, 95, 204, 0.3);
+}
+
+input[type="range"]:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 3px rgba(0, 95, 204, 0.3);
+}
+
+select,
+textarea {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: #1a1d29;
+  color: #e9edf6;
+  border: 2px solid #574103;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font: inherit;
+  min-height: 44px;
+}
+
+select:focus-visible,
+textarea:focus-visible {
+  border-color: #005fcc;
+  box-shadow: 0 0 0 3px rgba(0, 95, 204, 0.3);
+}
+
+/* Badge accessibility */
+.nav-badge,
+.tab-badge {
+  min-width: 20px;
+  min-height: 20px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #ff4444;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+}
+
+.nav-badge.hidden,
+.tab-badge.hidden {
+  display: none;
+}
   height: 4px;
   border-radius: 2px;
   background: #2d3345;
