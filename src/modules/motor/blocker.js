@@ -75,6 +75,7 @@
   let keyboardHandler = null;
   let currentMode = "none";
   let interactionStyleEl = null;
+  let hoverShieldEl = null;
   let pointerPolicy = { blockMouse: false, blockTouch: false };
   let mousePolicy = { blockMouse: false, blockKeyboard: false };
 
@@ -83,6 +84,32 @@
       event.preventDefault();
     }
     event.stopImmediatePropagation();
+  }
+
+  function setHoverShield(active) {
+    if (!document.documentElement) return;
+
+    if (!active) {
+      hoverShieldEl?.remove();
+      hoverShieldEl = null;
+      return;
+    }
+
+    if (hoverShieldEl) return;
+
+    const shield = document.createElement("div");
+    shield.setAttribute("data-muta7-hover-shield", "true");
+    Object.assign(shield.style, {
+      position: "fixed",
+      inset: "0",
+      zIndex: "2147483647",
+      pointerEvents: "auto",
+      background: "transparent",
+      cursor: "not-allowed",
+    });
+
+    document.documentElement.appendChild(shield);
+    hoverShieldEl = shield;
   }
 
   function setInteractionOverride({ blockMouse = false, blockTouch = false }) {
@@ -94,6 +121,7 @@
     }
 
     if (!blockMouse && !blockTouch) {
+      setHoverShield(false);
       return;
     }
 
@@ -125,6 +153,7 @@
     style.textContent = styleRules.join("\n");
     document.documentElement.appendChild(style);
     interactionStyleEl = style;
+    setHoverShield(blockMouse);
   }
 
   function shouldBlockMouseEvent(event) {
@@ -296,6 +325,7 @@
 
   function disable() {
     applyMode("none");
+    setHoverShield(false);
   }
 
   function update(config = {}) {

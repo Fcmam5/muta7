@@ -67,7 +67,7 @@ function applyColorBlindnessState(colorState, allowed) {
   module.update?.({ mode: colorState.mode });
 }
 
-function applyMotorState(blockerState, allowed) {
+function applyMotorBlockerState(blockerState, allowed) {
   const module = globalThis.Muta7MotorBlockerModule;
   if (!module) return;
 
@@ -78,6 +78,54 @@ function applyMotorState(blockerState, allowed) {
   }
 
   module.update?.({ mode });
+}
+
+function applyMotorJitterState(jitterState, allowed) {
+  const module = globalThis.Muta7MotorJitterModule;
+  if (!module) return;
+
+  if (!allowed || !jitterState?.enabled) {
+    module.disable?.();
+    return;
+  }
+
+  module.update?.(jitterState);
+}
+
+function applyMotorAccidentalState(accidentalState, allowed) {
+  const module = globalThis.Muta7MotorAccidentalModule;
+  if (!module) return;
+
+  if (!allowed || !accidentalState?.enabled) {
+    module.disable?.();
+    return;
+  }
+
+  module.update?.(accidentalState);
+}
+
+function applyMotorMisclickState(misclickState, allowed) {
+  const module = globalThis.Muta7MotorMisclickModule;
+  if (!module) return;
+
+  if (!allowed || !misclickState?.enabled) {
+    module.disable?.();
+    return;
+  }
+
+  module.update?.(misclickState);
+}
+
+function applyMotorAsymmetryState(asymmetryState, allowed) {
+  const module = globalThis.Muta7MotorAsymmetryModule;
+  if (!module) return;
+
+  if (!allowed || !asymmetryState?.enabled) {
+    module.disable?.();
+    return;
+  }
+
+  module.update?.(asymmetryState);
 }
 
 function applyHearingState(simulatorState, allowed) {
@@ -98,7 +146,12 @@ function applyState(extensionState) {
   const allowed = isCurrentUrlAllowed(extensionState);
   applyBlurState(extensionState?.visual?.blur, allowed);
   applyColorBlindnessState(extensionState?.visual?.colorBlindness, allowed);
-  applyMotorState(extensionState?.motor?.blocker, allowed);
+  const motorState = extensionState?.motor ?? {};
+  applyMotorBlockerState(motorState.blocker, allowed);
+  applyMotorJitterState(motorState.jitter, allowed);
+  applyMotorAccidentalState(motorState.accidental, allowed);
+  applyMotorMisclickState(motorState.misclick, allowed);
+  applyMotorAsymmetryState(motorState.asymmetry, allowed);
   applyHearingState(extensionState?.hearing?.simulator, allowed);
 }
 

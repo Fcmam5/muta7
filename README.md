@@ -11,9 +11,12 @@ Muta7 is a Chromium browser extension that simulates real-world accessibility im
 - **Visual Impairment Simulation** (v0)
   - Adjustable blur intensity
   - Color blindness filters (Protanopia, Deuteranopia, Tritanopia, Monochromacy)
-- **Motor Disability Simulation** (v0)
-  - Disable mouse/pointer interactions (cursor forced to `help`)
-  - Disable both mouse and keyboard to mimic voice-only workflows
+- **Motor Disability Simulation** (v1)
+  - Disable any combination of mouse, touch, and keyboard inputs
+  - Pointer jitter (low/medium/high) to mimic tremors
+  - Accidental clicks/releases (ghost clicks & premature lift-offs)
+  - Target misclick simulator (snap to nearest or random offset)
+  - Asymmetry/stroke mode (slowdown + drift on chosen side)
   - Applies only on websites you explicitly allow
 - **Hearing Simulation** (v0)
   - Deaf mode mutes all audio entirely
@@ -77,7 +80,7 @@ By default, Muta7 works only on websites you specify:
 - **Blur simulation** — Toggle on/off
 - **Intensity** — Slider from 0–100
 - **Color blindness filter** — Toggle on/off with selectable modes
-- **Motor disability simulation** — Choose between “allow all,” “disable mouse,” or “disable mouse & keyboard”
+- **Motor disability simulation** — Mix-and-match disable mouse/touch/keyboard, pointer jitter levels, accidental clicks/releases, misclick radius/strategy, and asymmetry drift/slowdown
 - **Hearing simulation** — Switch between “allow all,” “deaf,” or “hard of hearing,” with an adjustable reduction level
 - **Reminder banner** — Shows when any simulation is active
 - **Extension badge** — Shows active simulation count
@@ -85,9 +88,12 @@ By default, Muta7 works only on websites you specify:
 ### Motor disability simulation
 
 - Enable the extension on the websites you want to test (Website scope section)
-- Pick **Disable mouse (pointer)** to block all hover, click, scroll, and pointer events while forcing the cursor to the `help` icon
-- Pick **Disable mouse & keyboard** to also block keyboard interactions, approximating voice-only environments
-- Motor blocking automatically pauses on sites outside the allowed list so the rest of your browsing stays unaffected
+- Use the **input blockers** section to disable any combination of mouse, touch, and keyboard control
+- Toggle **Pointer jitter** and pick Low/Medium/High to add tremor-like movement to the cursor
+- Toggle **Accidental clicks & releases** to add ghost presses or premature releases (or both)
+- Enable **Target misclicks** to reroute taps using a nearest-target or random-offset strategy with an adjustable radius
+- Enable **Asymmetry / Stroke Simulation** to slow movement and add drift on a left/right/random side with configurable slowdown and drift rate
+- All simulations automatically pause on sites outside the allowed list so regular browsing stays unaffected
 
 ### Hearing simulation
 
@@ -133,7 +139,11 @@ muta7/
 │   │   │   ├── colorblindness.js
 │   │   │   └── filter-stack.js
 │   │   └── motor/          # Motor impairments
-│   │       └── blocker.js
+│   │       ├── blocker.js
+│   │       ├── jitter.js
+│   │       ├── accidental.js
+│   │       ├── misclick.js
+│   │       └── asymmetry.js
 │   └── popup/              # Extension popup
 │       ├── popup.html
 │       ├── popup.css

@@ -368,6 +368,208 @@
                   </label>
                 </fieldset>
               </section>
+
+              <section
+                class="control-group"
+                aria-labelledby="motor-jitter-heading"
+              >
+                <h3 id="motor-jitter-heading" class="control-title">
+                  Pointer Jitter
+                </h3>
+                <p class="control-description">
+                  Simulate tremors by adding jitter to pointer movement.
+                </p>
+                <label class="toggle-row" for="motor-jitter-enabled">
+                  <span>Enable pointer jitter</span>
+                  <input id="motor-jitter-enabled" type="checkbox" />
+                </label>
+                <label for="motor-jitter-level">Severity</label>
+                <div class="segmented-control" id="motor-jitter-level">
+                  <label>
+                    <input
+                      type="radio"
+                      name="motor-jitter-level"
+                      value="low"
+                      checked
+                    />
+                    Low
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="motor-jitter-level"
+                      value="medium"
+                    />
+                    Medium
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="motor-jitter-level"
+                      value="high"
+                    />
+                    High
+                  </label>
+                </div>
+              </section>
+
+              <section
+                class="control-group"
+                aria-labelledby="motor-accidental-heading"
+              >
+                <h3 id="motor-accidental-heading" class="control-title">
+                  Accidental Clicks & Releases
+                </h3>
+                <p class="control-description">
+                  Randomize unwanted clicks or premature releases.
+                </p>
+                <label class="toggle-row" for="motor-accidental-enabled">
+                  <span>Enable accidental interactions</span>
+                  <input id="motor-accidental-enabled" type="checkbox" />
+                </label>
+                <fieldset>
+                  <legend>Behavior</legend>
+                  <label class="radio-row">
+                    <input
+                      type="radio"
+                      name="motor-accidental-mode"
+                      value="down"
+                      checked
+                    />
+                    Ghost clicks (extra presses)
+                  </label>
+                  <label class="radio-row">
+                    <input
+                      type="radio"
+                      name="motor-accidental-mode"
+                      value="up"
+                    />
+                    Premature release
+                  </label>
+                  <label class="radio-row">
+                    <input
+                      type="radio"
+                      name="motor-accidental-mode"
+                      value="both"
+                    />
+                    Both behaviors
+                  </label>
+                </fieldset>
+              </section>
+
+              <section
+                class="control-group"
+                aria-labelledby="motor-misclick-heading"
+              >
+                <h3 id="motor-misclick-heading" class="control-title">
+                  Target Misclicks
+                </h3>
+                <p class="control-description">
+                  Offset clicks to nearby or random targets to test precision.
+                </p>
+                <label class="toggle-row" for="motor-misclick-enabled">
+                  <span>Enable misclick simulation</span>
+                  <input id="motor-misclick-enabled" type="checkbox" />
+                </label>
+                <label for="motor-misclick-strategy">Strategy</label>
+                <select id="motor-misclick-strategy">
+                  <option value="nearest">
+                    Snap to nearest interactive element
+                  </option>
+                  <option value="random">Random offset within radius</option>
+                </select>
+                <label for="motor-misclick-radius">Offset radius (px)</label>
+                <input
+                  id="motor-misclick-radius"
+                  type="range"
+                  min="10"
+                  max="120"
+                  step="5"
+                  value="35"
+                />
+                <output
+                  id="motor-misclick-radius-value"
+                  for="motor-misclick-radius"
+                >
+                  35
+                </output>
+              </section>
+
+              <section
+                class="control-group"
+                aria-labelledby="motor-asymmetry-heading"
+              >
+                <h3 id="motor-asymmetry-heading" class="control-title">
+                  Asymmetry / Stroke Simulation
+                </h3>
+                <p class="control-description">
+                  Slow movement and drift on one side to mimic hemiparesis.
+                </p>
+                <label class="toggle-row" for="motor-asymmetry-enabled">
+                  <span>Enable asymmetry</span>
+                  <input id="motor-asymmetry-enabled" type="checkbox" />
+                </label>
+                <fieldset>
+                  <legend>Weak side</legend>
+                  <label class="radio-row">
+                    <input
+                      type="radio"
+                      name="motor-asymmetry-side"
+                      value="left"
+                      checked
+                    />
+                    Left side struggles
+                  </label>
+                  <label class="radio-row">
+                    <input
+                      type="radio"
+                      name="motor-asymmetry-side"
+                      value="right"
+                    />
+                    Right side struggles
+                  </label>
+                  <label class="radio-row">
+                    <input
+                      type="radio"
+                      name="motor-asymmetry-side"
+                      value="random"
+                    />
+                    Randomize per page load
+                  </label>
+                </fieldset>
+                <label for="motor-asymmetry-slowdown"
+                  >Slowdown multiplier</label
+                >
+                <input
+                  id="motor-asymmetry-slowdown"
+                  type="range"
+                  min="30"
+                  max="90"
+                  step="5"
+                  value="60"
+                />
+                <output
+                  id="motor-asymmetry-slowdown-value"
+                  for="motor-asymmetry-slowdown"
+                >
+                  0.60x
+                </output>
+                <label for="motor-asymmetry-drift">Drift per second (px)</label>
+                <input
+                  id="motor-asymmetry-drift"
+                  type="range"
+                  min="20"
+                  max="200"
+                  step="10"
+                  value="80"
+                />
+                <output
+                  id="motor-asymmetry-drift-value"
+                  for="motor-asymmetry-drift"
+                >
+                  80
+                </output>
+              </section>
             </div>
 
             <!-- Hearing Tab -->
