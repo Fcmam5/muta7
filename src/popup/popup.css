@@ -428,6 +428,31 @@ textarea:focus-visible {
   margin-bottom: 12px;
 }
 
+.segmented-control {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.segmented-control label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid #2d3345;
+  border-radius: 8px;
+  background: #121723;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.segmented-control input[type="radio"] {
+  margin: 0 6px 0 0;
+  accent-color: #2168ff;
+}
+
 .slider-row {
   margin-top: 8px;
   display: grid;
@@ -728,12 +753,6 @@ textarea:focus-visible {
 .nav-badge.hidden,
 .tab-badge.hidden {
   display: none;
-}
-  height: 4px;
-  border-radius: 2px;
-  background: #2d3345;
-  outline: none;
-  -webkit-appearance: none;
 }
 
 input[type="range"]::-webkit-slider-thumb {

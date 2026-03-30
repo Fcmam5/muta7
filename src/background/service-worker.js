@@ -18,6 +18,7 @@ const MOTOR_MODES = [
 ];
 const MOTOR_JITTER_LEVELS = ["low", "medium", "high"];
 const HEARING_MODES = ["none", "deaf", "hard"];
+const DYSLEXIA_LEVELS = ["mild", "moderate", "severe"];
 
 const extensionState = {
   visual: {
@@ -45,6 +46,14 @@ const extensionState = {
     simulator: {
       mode: "none",
       level: 60,
+    },
+  },
+  cognitive: {
+    dyslexia: {
+      enabled: false,
+      level: "moderate",
+      spotlightEnabled: true,
+      scramblingEnabled: true,
     },
   },
   scope: {
@@ -120,6 +129,27 @@ function normalizeHearingState(simulator) {
   return { mode, level: boundedLevel };
 }
 
+function normalizeDyslexiaState(dyslexia) {
+  const level = DYSLEXIA_LEVELS.includes(
+    String(dyslexia?.level ?? "").toLowerCase(),
+  )
+    ? String(dyslexia.level).toLowerCase()
+    : "moderate";
+
+  return {
+    enabled: Boolean(dyslexia?.enabled),
+    level,
+    spotlightEnabled:
+      dyslexia?.spotlightEnabled === undefined
+        ? true
+        : Boolean(dyslexia.spotlightEnabled),
+    scramblingEnabled:
+      dyslexia?.scramblingEnabled === undefined
+        ? true
+        : Boolean(dyslexia.scramblingEnabled),
+  };
+}
+
 function normalizeUrlRule(value) {
   const trimmed = String(value ?? "").trim();
   if (!trimmed) return null;
@@ -189,6 +219,7 @@ function mergeWithDefaultState(state) {
   const incomingColorBlindness = state?.visual?.colorBlindness;
   const incomingMotorBlocker = state?.motor?.blocker;
   const incomingHearing = state?.hearing?.simulator;
+  const incomingDyslexia = state?.cognitive?.dyslexia;
   const incomingScope = state?.scope;
   return {
     visual: {
@@ -201,6 +232,9 @@ function mergeWithDefaultState(state) {
     },
     hearing: {
       simulator: normalizeHearingState(incomingHearing),
+    },
+    cognitive: {
+      dyslexia: normalizeDyslexiaState(incomingDyslexia),
     },
     scope: normalizeScope(incomingScope),
   };
@@ -235,6 +269,10 @@ function isMotorSimulationEnabled(state) {
   return blockerActive || jitterActive;
 }
 
+function isCognitiveSimulationEnabled(state) {
+  return Boolean(state?.cognitive?.dyslexia?.enabled);
+}
+
 function updateActionNotification(state) {
   const blurEnabled = Number(Boolean(state?.visual?.blur?.enabled));
   const colorEnabled = Number(Boolean(state?.visual?.colorBlindness?.enabled));
@@ -242,8 +280,13 @@ function updateActionNotification(state) {
   const hearingEnabled = Number(
     (state?.hearing?.simulator?.mode ?? "none") !== "none",
   );
+  const cognitiveEnabled = Number(isCognitiveSimulationEnabled(state));
   const activeCount =
-    blurEnabled + colorEnabled + motorEnabled + hearingEnabled;
+    blurEnabled +
+    colorEnabled +
+    motorEnabled +
+    hearingEnabled +
+    cognitiveEnabled;
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const activeTab = tabs?.[0];
@@ -310,6 +353,27 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       updateActionNotification(storedState);
       sendResponse({ extensionState: storedState });
     });
+    return true;
+  }
+
+  if (message?.type === "SET_DYSLEXIA_STATE") {
+    getStoredState()
+      .then((storedState) => {
+        const nextState = {
+          ...storedState,
+          cognitive: {
+            ...storedState.cognitive,
+            dyslexia: normalizeDyslexiaState(message.dyslexia),
+          },
+        };
+
+        return setStoredState(nextState).then(() => nextState);
+      })
+      .then((nextState) => {
+        updateActionNotification(nextState);
+        sendStateToTab(message.tabId, nextState);
+        sendResponse({ ok: true, extensionState: nextState });
+      });
     return true;
   }
 

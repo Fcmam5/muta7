@@ -491,20 +491,67 @@
 
             <!-- Cognitive Tab -->
             <div class="tab-panel" id="cognitive-panel" role="tabpanel" hidden>
-              <div class="coming-soon">
-                <div class="coming-soon-icon">🚧</div>
-                <h3>Coming Soon</h3>
-                <p>
-                  Cognitive disability simulations will be available in future
-                  updates.
+              <section
+                class="control-group"
+                aria-labelledby="dyslexia-controls-heading"
+              >
+                <h3 id="dyslexia-controls-heading" class="control-title">
+                  Dyslexia Reading Simulation
+                </h3>
+                <p class="control-description">
+                  Simulate unstable reading with subtle word motion, occasional
+                  reread pressure, and cursor-guided tracking.
                 </p>
-                <ul>
-                  <li>ADHD attention simulation</li>
-                  <li>Dyslexia reading simulation</li>
-                  <li>Autism sensory processing</li>
-                  <li>Memory impairment simulation</li>
-                </ul>
-              </div>
+
+                <label class="toggle-row" for="dyslexia-enabled">
+                  <span>Enable dyslexia simulation</span>
+                  <input id="dyslexia-enabled" type="checkbox" />
+                </label>
+
+                <label for="dyslexia-level">Intensity level</label>
+                <div class="segmented-control" id="dyslexia-level" role="group">
+                  <label>
+                    <input type="radio" name="dyslexia-level" value="mild" />
+                    Mild
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="dyslexia-level"
+                      value="moderate"
+                      checked
+                    />
+                    Moderate
+                  </label>
+                  <label>
+                    <input type="radio" name="dyslexia-level" value="severe" />
+                    Severe
+                  </label>
+                </div>
+
+                <p class="field-hint">
+                  Mild: strain only. Moderate: rare scrambling. Severe:
+                  occasional scrambling and stronger instability.
+                </p>
+
+                <label class="toggle-row" for="dyslexia-spotlight-enabled">
+                  <span>Enable cursor spotlight</span>
+                  <input
+                    id="dyslexia-spotlight-enabled"
+                    type="checkbox"
+                    checked
+                  />
+                </label>
+
+                <label class="toggle-row" for="dyslexia-scrambling-enabled">
+                  <span>Enable rare internal-letter scrambling</span>
+                  <input
+                    id="dyslexia-scrambling-enabled"
+                    type="checkbox"
+                    checked
+                  />
+                </label>
+              </section>
             </div>
           </div>
           <div class="preset-actions">

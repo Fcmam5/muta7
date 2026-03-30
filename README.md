@@ -21,6 +21,11 @@ Muta7 is a Chromium browser extension that simulates real-world accessibility im
 - **Hearing Simulation** (v0)
   - Deaf mode mutes all audio entirely
   - Hard-of-hearing mode reduces volume with an adjustable slider and adds muffling
+- **Cognitive Simulation** (v0)
+  - Dyslexia reading simulation with subtle word instability
+  - Cursor spotlight to support line tracking
+  - Rare internal-letter scrambling (moderate/severe)
+  - Brief, occasional focus-loss blur pulses
 - **Website Scoping**
   - Enable only on specified websites
   - Support for origin and path-level rules
@@ -82,6 +87,7 @@ By default, Muta7 works only on websites you specify:
 - **Color blindness filter** — Toggle on/off with selectable modes
 - **Motor disability simulation** — Mix-and-match disable mouse/touch/keyboard, pointer jitter levels, accidental clicks/releases, misclick radius/strategy, and asymmetry drift/slowdown
 - **Hearing simulation** — Switch between “allow all,” “deaf,” or “hard of hearing,” with an adjustable reduction level
+- **Dyslexia simulation** — Choose mild/moderate/severe reading instability, optional cursor spotlight, and optional rare internal-letter scrambling
 - **Reminder banner** — Shows when any simulation is active
 - **Extension badge** — Shows active simulation count
 
@@ -101,6 +107,18 @@ By default, Muta7 works only on websites you specify:
 - Pick **Deaf** to mute every audio/video element and AudioContext output
 - Pick **Hard of hearing** to reduce volume (with a slider from subtle to severe reduction) and slightly muffle playback
 - Like other simulations, hearing effects stop automatically on non-allowed sites
+
+### Dyslexia simulation
+
+- Enable the extension only on sites you want to test (Website scope section)
+- Use the **Cognitive → Dyslexia** controls in the popup to enable simulation
+- Level behavior:
+  - **Mild**: subtle instability, no letter scrambling
+  - **Moderate**: subtle instability + rare internal-letter scrambling
+  - **Severe**: stronger instability + occasional internal-letter scrambling
+- The simulation keeps first/last letters intact and avoids short/common words to preserve readability
+- Long numbers are made harder through extra instability (without digit swaps)
+- A cursor spotlight keeps the reading area near the pointer clearer while brief blur pulses can trigger momentary re-tracking
 
 ## What This Is Not
 

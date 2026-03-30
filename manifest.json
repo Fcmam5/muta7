@@ -20,6 +20,7 @@
         "src/modules/motor/blocker.js",
         "src/modules/motor/jitter.js",
         "src/modules/hearing/simulator.js",
+        "src/modules/cognitive/dyslexia.js",
         "src/content/index.js"
       ],
       "run_at": "document_start",

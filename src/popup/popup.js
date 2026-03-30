@@ -18,6 +18,22 @@ function switchPage(pageName) {
   });
 }
 
+function sendDyslexiaUpdate() {
+  return new Promise(async (resolve) => {
+    const tabId = activeTabId ?? (await getActiveTabId());
+    const dyslexia = currentDyslexiaFromUi();
+
+    chrome.runtime.sendMessage(
+      {
+        type: "SET_DYSLEXIA_STATE",
+        tabId,
+        dyslexia,
+      },
+      () => resolve(),
+    );
+  });
+}
+
 // Add main navigation event listeners
 navButtons.forEach((button) => {
   button.addEventListener("click", () => {
@@ -61,36 +77,72 @@ const PRESETS = {
     colorBlindness: { enabled: false, mode: "none" },
     motor: { mode: "mouse" },
     hearing: { mode: "hard", level: 70 },
+    dyslexia: {
+      enabled: false,
+      level: "moderate",
+      spotlightEnabled: true,
+      scramblingEnabled: true,
+    },
   },
   colorblind: {
     blur: { enabled: false, intensity: 0 },
     colorBlindness: { enabled: true, mode: "deuteranopia" },
     motor: { mode: "none" },
     hearing: { mode: "none", level: 60 },
+    dyslexia: {
+      enabled: false,
+      level: "moderate",
+      spotlightEnabled: true,
+      scramblingEnabled: true,
+    },
   },
   "motor-impaired": {
     blur: { enabled: false, intensity: 0 },
     colorBlindness: { enabled: false, mode: "none" },
     motor: { mode: "full" },
     hearing: { mode: "none", level: 60 },
+    dyslexia: {
+      enabled: false,
+      level: "moderate",
+      spotlightEnabled: true,
+      scramblingEnabled: true,
+    },
   },
   "low-vision": {
     blur: { enabled: true, intensity: 70 },
     colorBlindness: { enabled: false, mode: "none" },
     motor: { mode: "none" },
     hearing: { mode: "none", level: 60 },
+    dyslexia: {
+      enabled: false,
+      level: "moderate",
+      spotlightEnabled: true,
+      scramblingEnabled: true,
+    },
   },
   deaf: {
     blur: { enabled: false, intensity: 0 },
     colorBlindness: { enabled: false, mode: "none" },
     motor: { mode: "none" },
     hearing: { mode: "deaf", level: 60 },
+    dyslexia: {
+      enabled: false,
+      level: "moderate",
+      spotlightEnabled: true,
+      scramblingEnabled: true,
+    },
   },
   adhd: {
     blur: { enabled: false, intensity: 0 },
     colorBlindness: { enabled: false, mode: "none" },
     motor: { mode: "none" },
     hearing: { mode: "none", level: 60 },
+    dyslexia: {
+      enabled: false,
+      level: "moderate",
+      spotlightEnabled: true,
+      scramblingEnabled: true,
+    },
   },
 };
 
@@ -115,6 +167,18 @@ function applyPreset(presetName) {
   hearingLevelValueEl.value = preset.hearing.level;
   hearingLevelEl.disabled = preset.hearing.mode !== "hard";
 
+  if (dyslexiaEnabledEl && dyslexiaLevelInputs.length > 0) {
+    dyslexiaEnabledEl.checked = Boolean(preset.dyslexia?.enabled);
+    setRadioGroupValue(
+      dyslexiaLevelInputs,
+      normalizeDyslexiaLevel(preset.dyslexia?.level),
+    );
+    dyslexiaSpotlightEnabledEl.checked =
+      preset.dyslexia?.spotlightEnabled !== false;
+    dyslexiaScramblingEnabledEl.checked =
+      preset.dyslexia?.scramblingEnabled !== false;
+  }
+
   // Update visual state
   updateReminderBanner();
 
@@ -125,6 +189,7 @@ function applyPreset(presetName) {
     sendMotorUpdate(),
     sendMotorJitterUpdate(),
     sendHearingUpdate(),
+    sendDyslexiaUpdate(),
   ]);
 
   markNeedsRefresh();
@@ -158,6 +223,16 @@ const motorJitterLevelInputs = document.querySelectorAll(
 const hearingModeEl = document.getElementById("hearing-mode");
 const hearingLevelEl = document.getElementById("hearing-level");
 const hearingLevelValueEl = document.getElementById("hearing-level-value");
+const dyslexiaEnabledEl = document.getElementById("dyslexia-enabled");
+const dyslexiaLevelInputs = document.querySelectorAll(
+  'input[name="dyslexia-level"]',
+);
+const dyslexiaSpotlightEnabledEl = document.getElementById(
+  "dyslexia-spotlight-enabled",
+);
+const dyslexiaScramblingEnabledEl = document.getElementById(
+  "dyslexia-scrambling-enabled",
+);
 const settingsReminderEl = document.getElementById("settings-reminder");
 const resetReminderEl = document.getElementById("reset-reminder");
 const enableCurrentSiteEl = document.getElementById("enable-current-site");
@@ -216,9 +291,19 @@ const DEFAULT_MOTOR_JITTER_STATE = {
   frequencyHz: MOTOR_JITTER_LEVELS.low.frequencyHz,
 };
 
+const DYSLEXIA_LEVELS = ["mild", "moderate", "severe"];
+
 function normalizeColorMode(mode) {
   const normalized = String(mode ?? "none").toLowerCase();
   if (!COLOR_MODES.includes(normalized)) return "none";
+  return normalized;
+}
+
+function normalizeDyslexiaLevel(level) {
+  const normalized = String(level ?? "moderate").toLowerCase();
+  if (!DYSLEXIA_LEVELS.includes(normalized)) {
+    return "moderate";
+  }
   return normalized;
 }
 
@@ -362,19 +447,22 @@ function updateReminderBanner() {
 
   const motorActive = isMotorSimulationActive();
   const hearingActive = hearingModeEl?.value !== "none";
+  const dyslexiaActive = Boolean(dyslexiaEnabledEl?.checked);
   const anyEnabled =
     blurEnabledEl?.checked ||
     false ||
     colorEnabledEl?.checked ||
     false ||
     motorActive ||
-    hearingActive;
+    hearingActive ||
+    dyslexiaActive;
 
   console.log("Reminder banner check:", {
     blurEnabled: blurEnabledEl?.checked,
     colorEnabled: colorEnabledEl?.checked,
     motorActive: motorActive,
     hearingActive: hearingActive,
+    dyslexiaActive: dyslexiaActive,
     anyEnabled: anyEnabled,
   });
 
@@ -407,6 +495,7 @@ function updateDisabilitiesBadge() {
   if (colorEnabledEl?.checked) activeCount++;
   if (isMotorSimulationActive()) activeCount++;
   if (hearingModeEl?.value !== "none") activeCount++;
+  if (dyslexiaEnabledEl?.checked) activeCount++;
 
   if (activeCount > 0 && disabilitiesCountEl) {
     disabilitiesCountEl.textContent = activeCount;
@@ -446,9 +535,10 @@ function updateIndividualDisabilityBadges() {
     hearingCountEl.classList.add("hidden");
   }
 
-  // Cognitive (always show indicator for future features)
-  // For now, keep it hidden since cognitive features aren't implemented yet
-  if (cognitiveIndicatorEl) {
+  // Cognitive (dyslexia)
+  if (dyslexiaEnabledEl?.checked && cognitiveIndicatorEl) {
+    cognitiveIndicatorEl.classList.remove("hidden");
+  } else if (cognitiveIndicatorEl) {
     cognitiveIndicatorEl.classList.add("hidden");
   }
 }
@@ -493,6 +583,22 @@ function readScopeFromState(state) {
   return state?.scope ?? { allowedUrls: [] };
 }
 
+function readDyslexiaFromState(state) {
+  const incoming = state?.cognitive?.dyslexia ?? {};
+  return {
+    enabled: Boolean(incoming.enabled),
+    level: normalizeDyslexiaLevel(incoming.level),
+    spotlightEnabled:
+      incoming.spotlightEnabled === undefined
+        ? true
+        : Boolean(incoming.spotlightEnabled),
+    scramblingEnabled:
+      incoming.scramblingEnabled === undefined
+        ? true
+        : Boolean(incoming.scramblingEnabled),
+  };
+}
+
 function readMotorJitterFromState(state) {
   const incoming = state?.motor?.jitter ?? {};
   const level = normalizeMotorJitterLevel(incoming.level);
@@ -526,6 +632,7 @@ function setUi(state) {
   const motorJitter = readMotorJitterFromState(state);
   const hearingMode = state?.hearing?.simulator?.mode ?? "none";
   const hearingLevel = Number(state?.hearing?.simulator?.level ?? 60);
+  const dyslexia = readDyslexiaFromState(state);
   const scope = readScopeFromState(state);
   const intensity = Math.max(0, Math.min(100, Number(blur.intensity) || 0));
   blurEnabledEl.checked = Boolean(blur.enabled);
@@ -542,6 +649,12 @@ function setUi(state) {
   hearingLevelEl.value = String(hearingLevel);
   hearingLevelValueEl.value = String(hearingLevel);
   hearingLevelEl.disabled = hearingModeEl.value !== "hard";
+  if (dyslexiaEnabledEl) {
+    dyslexiaEnabledEl.checked = dyslexia.enabled;
+    setRadioGroupValue(dyslexiaLevelInputs, dyslexia.level);
+    dyslexiaSpotlightEnabledEl.checked = dyslexia.spotlightEnabled;
+    dyslexiaScramblingEnabledEl.checked = dyslexia.scramblingEnabled;
+  }
   setScopeUi(scope);
   updateReminderBanner();
 
@@ -561,6 +674,7 @@ function updatePresetSelection(state) {
       mode: state?.hearing?.simulator?.mode ?? "none",
       level: Number(state?.hearing?.simulator?.level ?? 60),
     },
+    dyslexia: readDyslexiaFromState(state),
   };
 
   // Check if current settings match any preset
@@ -586,7 +700,13 @@ function isSettingsMatch(current, preset) {
     current.colorBlindness.mode === preset.colorBlindness.mode &&
     current.motor.mode === preset.motor.mode &&
     current.hearing.mode === preset.hearing.mode &&
-    current.hearing.level === preset.hearing.level
+    current.hearing.level === preset.hearing.level &&
+    current.dyslexia.enabled === Boolean(preset.dyslexia?.enabled) &&
+    current.dyslexia.level === normalizeDyslexiaLevel(preset.dyslexia?.level) &&
+    current.dyslexia.spotlightEnabled ===
+      (preset.dyslexia?.spotlightEnabled !== false) &&
+    current.dyslexia.scramblingEnabled ===
+      (preset.dyslexia?.scramblingEnabled !== false)
   );
 }
 
@@ -643,6 +763,25 @@ function currentHearingStateFromUi() {
   return {
     mode: hearingModeEl.value,
     level: Number(hearingLevelEl.value),
+  };
+}
+
+function currentDyslexiaFromUi() {
+  const level = normalizeDyslexiaLevel(
+    getCheckedRadioValue(dyslexiaLevelInputs, "moderate"),
+  );
+
+  return {
+    enabled: Boolean(dyslexiaEnabledEl?.checked),
+    level,
+    spotlightEnabled:
+      dyslexiaSpotlightEnabledEl?.checked === undefined
+        ? true
+        : Boolean(dyslexiaSpotlightEnabledEl.checked),
+    scramblingEnabled:
+      dyslexiaScramblingEnabledEl?.checked === undefined
+        ? true
+        : Boolean(dyslexiaScramblingEnabledEl.checked),
   };
 }
 
@@ -771,6 +910,38 @@ blurEnabledEl.addEventListener("change", () => {
   updateReminderBanner();
   sendBlurUpdate();
   markNeedsRefresh();
+});
+
+if (dyslexiaEnabledEl) {
+  dyslexiaEnabledEl.addEventListener("change", () => {
+    updateReminderBanner();
+    sendDyslexiaUpdate();
+    markNeedsRefresh();
+  });
+}
+
+if (dyslexiaSpotlightEnabledEl) {
+  dyslexiaSpotlightEnabledEl.addEventListener("change", () => {
+    if (!dyslexiaEnabledEl?.checked) return;
+    sendDyslexiaUpdate();
+    markNeedsRefresh();
+  });
+}
+
+if (dyslexiaScramblingEnabledEl) {
+  dyslexiaScramblingEnabledEl.addEventListener("change", () => {
+    if (!dyslexiaEnabledEl?.checked) return;
+    sendDyslexiaUpdate();
+    markNeedsRefresh();
+  });
+}
+
+dyslexiaLevelInputs.forEach((input) => {
+  input.addEventListener("change", () => {
+    if (!dyslexiaEnabledEl?.checked) return;
+    sendDyslexiaUpdate();
+    markNeedsRefresh();
+  });
 });
 
 blurIntensityEl.addEventListener("input", () => {
@@ -934,9 +1105,18 @@ async function resetSimulations() {
   console.log("Motor inputs enabled");
   if (motorJitterEnabledEl) motorJitterEnabledEl.checked = false;
   setRadioGroupValue(motorJitterLevelInputs, "low");
-  if (motorAccidentalEnabledEl) motorAccidentalEnabledEl.checked = false;
-  setRadioGroupValue(motorAccidentalModeInputs, "down");
-  if (motorMisclickEnabledEl) motorMisclickEnabledEl.checked = false;
+  if (
+    typeof motorAccidentalEnabledEl !== "undefined" &&
+    motorAccidentalEnabledEl
+  ) {
+    motorAccidentalEnabledEl.checked = false;
+  }
+  if (typeof motorAccidentalModeInputs !== "undefined") {
+    setRadioGroupValue(motorAccidentalModeInputs, "down");
+  }
+  if (typeof motorMisclickEnabledEl !== "undefined" && motorMisclickEnabledEl) {
+    motorMisclickEnabledEl.checked = false;
+  }
   if (hearingModeEl) {
     hearingModeEl.value = "none";
     console.log("Hearing mode set to none");
@@ -953,6 +1133,12 @@ async function resetSimulations() {
     hearingLevelEl.disabled = true;
     console.log("Hearing level disabled");
   }
+  if (dyslexiaEnabledEl) {
+    dyslexiaEnabledEl.checked = false;
+  }
+  setRadioGroupValue(dyslexiaLevelInputs, "moderate");
+  if (dyslexiaSpotlightEnabledEl) dyslexiaSpotlightEnabledEl.checked = true;
+  if (dyslexiaScramblingEnabledEl) dyslexiaScramblingEnabledEl.checked = true;
 
   // Clear preset selection
   if (presetCards) {
@@ -984,11 +1170,16 @@ async function resetSimulations() {
     await sendMotorJitterUpdate();
     console.log("Motor jitter reset sent");
 
-    await sendMotorAccidentalUpdate();
-    console.log("Motor accidental reset sent");
+    if (typeof sendMotorAccidentalUpdate === "function") {
+      await sendMotorAccidentalUpdate();
+      console.log("Motor accidental reset sent");
+    }
 
     await sendHearingUpdate();
     console.log("Hearing reset sent");
+
+    await sendDyslexiaUpdate();
+    console.log("Dyslexia reset sent");
 
     console.log("All reset updates sent successfully");
 

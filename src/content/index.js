@@ -106,6 +106,18 @@ function applyHearingState(simulatorState, allowed) {
   module.update?.({ mode, level });
 }
 
+function applyDyslexiaState(dyslexiaState, allowed) {
+  const module = globalThis.Muta7CognitiveDyslexiaModule;
+  if (!module) return;
+
+  if (!allowed || !dyslexiaState?.enabled) {
+    module.disable?.();
+    return;
+  }
+
+  module.update?.(dyslexiaState);
+}
+
 function applyState(extensionState) {
   const allowed = isCurrentUrlAllowed(extensionState);
   applyBlurState(extensionState?.visual?.blur, allowed);
@@ -114,6 +126,7 @@ function applyState(extensionState) {
   applyMotorBlockerState(motorState.blocker, allowed);
   applyMotorJitterState(motorState.jitter, allowed);
   applyHearingState(extensionState?.hearing?.simulator, allowed);
+  applyDyslexiaState(extensionState?.cognitive?.dyslexia, allowed);
 }
 
 chrome.runtime.sendMessage({ type: "GET_STATE" }, (response) => {
